@@ -13,26 +13,31 @@ import { SectorsSection } from "@/components/sections/SectorsSection";
 import { StatsSection } from "@/components/sections/StatsSection";
 import { TracksSection } from "@/components/sections/TracksSection";
 import { ClientEffects } from "@/components/ui/ClientEffects";
+import { getSiteContent } from "@/lib/site-content";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const site = await getSiteContent();
+
   return (
     <>
-      <Header />
+      <Header site={site} />
       <main id="seredo-top">
-        <HeroSection />
-        <EventInfoSection />
-        <AboutSection />
-        <PillarsSection />
-        <TracksSection />
-        <DeepAboutSection />
-        <EcosystemSection />
-        <StatsSection />
-        <AudienceSection />
-        <SectorsSection />
-        <PartnersSection />
-        <FinalCtaSection />
+        <HeroSection site={site} />
+        <EventInfoSection site={site} />
+        <AboutSection site={site} />
+        <PillarsSection site={site} />
+        <TracksSection site={site} />
+        <DeepAboutSection site={site} />
+        <EcosystemSection site={site} />
+        <StatsSection site={site} />
+        <AudienceSection site={site} />
+        <SectorsSection site={site} />
+        <PartnersSection site={site} />
+        <FinalCtaSection site={site} />
       </main>
-      <Footer />
+      <Footer site={site} />
       <ClientEffects />
     </>
   );

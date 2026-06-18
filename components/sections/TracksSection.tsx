@@ -1,21 +1,27 @@
 import { ArrowLeft, Building2, Handshake, UserRound } from "lucide-react";
-import { tracks } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 
 const trackIcons = [Building2, UserRound, Handshake];
 
-export function TracksSection() {
+type TracksSectionProps = {
+  site?: SiteContent;
+};
+
+export function TracksSection({ site = defaultSiteContent }: TracksSectionProps) {
+  const section = site.tracksSection;
+
   return (
     <section id="seredo-register" className="section-pad bg-gradient-to-b from-surface to-mist">
       <div className="section-container">
         <div className="reveal mx-auto mb-12 max-w-4xl text-center">
-          <h2 className="section-title">حيث تلتقي الفرص العقارية بصنّاع القرار</h2>
+          <h2 className="section-title">{section.title}</h2>
           <p className="section-copy mx-auto">
-            منصة عقارية متخصصة تجمع المطورين العقاريين، المستثمرين، جهات التمويل، والخبراء في بيئة مهنية تُمكّن من بناء الشراكات واستكشاف الفرص الاستثمارية.
+            {section.description}
           </p>
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
-          {tracks.map((track, index) => {
+          {section.items.map((track, index) => {
             const Icon = trackIcons[index] ?? Building2;
 
             return (

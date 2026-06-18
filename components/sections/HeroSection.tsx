@@ -1,9 +1,17 @@
 import Image from "next/image";
 import { ArrowLeft, CalendarDays, Clock3, MapPin } from "lucide-react";
-import { assets, links } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 import { Countdown } from "@/components/ui/Countdown";
 
-export function HeroSection() {
+const highlightIcons = [CalendarDays, Clock3, MapPin];
+
+type HeroSectionProps = {
+  site?: SiteContent;
+};
+
+export function HeroSection({ site = defaultSiteContent }: HeroSectionProps) {
+  const { assets, hero } = site;
+
   return (
     <section
       aria-labelledby="hero-title"
@@ -22,7 +30,7 @@ export function HeroSection() {
           <figure className="relative mx-auto aspect-[1.04/1] w-full max-w-[600px] overflow-hidden rounded-[28px] border border-brand-600/10 bg-brand-900 shadow-strong">
             <Image
               src={assets.networkImage}
-              alt="لقطة علوية من معرض سيريدو تظهر أجنحة العارضين وزوار المعرض"
+              alt={hero.imageAlt}
               fill
               priority
               loading="eager"
@@ -31,9 +39,9 @@ export function HeroSection() {
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,51,0.68),rgba(15,23,51,0.18)_44%,rgba(15,23,51,0.04))]" />
             <figcaption className="absolute inset-x-6 top-12 text-center text-white sm:inset-x-9">
-              <h2 className="font-display text-2xl font-black leading-tight text-white sm:text-3xl">حيث تلتقي العمارة بالاستثمار</h2>
+              <h2 className="font-display text-2xl font-black leading-tight text-white sm:text-3xl">{hero.figureTitle}</h2>
               <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-white/80 sm:text-base">
-                منصة عقارية واستثمارية مصممة لخلق فرص أعمال حقيقية وروابط استراتيجية بين قادة القطاع.
+                {hero.figureDescription}
               </p>
             </figcaption>
           </figure>
@@ -44,40 +52,38 @@ export function HeroSection() {
             id="hero-title"
             className="reveal mx-auto max-w-[820px] font-display text-[clamp(38px,4.2vw,68px)] font-black leading-[1.15] text-brand-900 lg:mx-0"
           >
-            معرض سيريدو للتطوير والتمليك العقاري - بدورته الخامسة
+            {hero.title}
           </h1>
 
           <p className="reveal mx-auto mt-6 max-w-3xl text-base leading-8 text-slate-600 lg:mx-0 lg:text-lg" data-delay="1">
-            معرض عقاري واستثماري متخصص يجمع المطورين، المستثمرين، جهات التمويل، والخبراء في منصة واحدة.
+            {hero.subtitle}
           </p>
 
           <div className="reveal mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm font-bold text-slate-800 lg:justify-start">
-            <span className="inline-flex items-center gap-2">
-              <CalendarDays size={19} className="text-brand-600" aria-hidden="true" />
-              من 6 - 8 سبتمبر 2026
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Clock3 size={19} className="text-brand-600" aria-hidden="true" />
-              مدة الفعالية 3 أيام
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <MapPin size={19} className="text-brand-600" aria-hidden="true" />
-              جدة
-            </span>
+            {hero.highlights.map((highlight, index) => {
+              const Icon = highlightIcons[index] ?? MapPin;
+
+              return (
+                <span className="inline-flex items-center gap-2" key={`${highlight}-${index}`}>
+                  <Icon size={19} className="text-brand-600" aria-hidden="true" />
+                  {highlight}
+                </span>
+              );
+            })}
           </div>
 
           <div className="reveal mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start" data-delay="2">
-            <a className="btn btn-primary min-h-[58px] px-8 text-base" href={links.visitorRegistration}>
-              سجّل كزائر
+            <a className="btn btn-primary min-h-[58px] px-8 text-base" href={hero.primaryButton.href}>
+              {hero.primaryButton.label}
               <ArrowLeft size={18} aria-hidden="true" />
             </a>
-            <a className="btn btn-outline min-h-[58px] bg-white/70 px-8 text-base" href={links.exhibitorRegistration}>
-              سجّل كعارض
+            <a className="btn btn-outline min-h-[58px] bg-white/70 px-8 text-base" href={hero.secondaryButton.href}>
+              {hero.secondaryButton.label}
             </a>
           </div>
 
           <div className="reveal mx-auto mt-9 max-w-[700px] lg:mx-0" data-delay="3">
-            <Countdown />
+            <Countdown {...hero.countdown} />
           </div>
         </div>
       </div>

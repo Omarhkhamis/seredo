@@ -1,21 +1,24 @@
 import type { Metadata } from "next";
+import { getSiteContent } from "@/lib/site-content";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "معرض سيريدو للتطوير والتمليك العقاري",
-  description:
-    "معرض عقاري واستثماري متخصص يجمع المطورين، المستثمرين، جهات التمويل، والخبراء في منصة واحدة بمدينة جدة.",
-  metadataBase: new URL("https://seredoexpo.sa"),
-  openGraph: {
-    title: "معرض سيريدو للتطوير والتمليك العقاري",
-    description:
-      "الدورة الخامسة من سيريدو: منصة عقارية متخصصة لعرض المشاريع وبناء الشراكات واستكشاف الفرص الاستثمارية.",
-    url: "https://seredoexpo.sa",
-    siteName: "SEREDO Expo",
-    locale: "ar_SA",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteContent();
+
+  return {
+    title: site.metadata.title,
+    description: site.metadata.description,
+    metadataBase: new URL(site.links.site),
+    openGraph: {
+      title: site.metadata.openGraphTitle,
+      description: site.metadata.openGraphDescription,
+      url: site.links.site,
+      siteName: "SEREDO Expo",
+      locale: "ar_SA",
+      type: "website",
+    },
+  };
+}
 
 export default function RootLayout({
   children,

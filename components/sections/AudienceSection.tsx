@@ -1,18 +1,24 @@
 import { Building2, Coins, Landmark, PiggyBank, Settings, UsersRound } from "lucide-react";
-import { audience } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 
 const icons = [Building2, Coins, PiggyBank, UsersRound, Settings, Landmark];
 
-export function AudienceSection() {
+type AudienceSectionProps = {
+  site?: SiteContent;
+};
+
+export function AudienceSection({ site = defaultSiteContent }: AudienceSectionProps) {
+  const section = site.audienceSection;
+
   return (
     <section className="section-pad bg-white">
       <div className="section-container">
         <div className="reveal mb-10 max-w-3xl">
-          <h2 className="section-title">التقِ بصناع القرار في القطاع العقاري</h2>
+          <h2 className="section-title">{section.title}</h2>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          {audience.map((item, index) => {
+          {section.items.map((item, index) => {
             const Icon = icons[index] ?? Building2;
 
             return (

@@ -1,12 +1,7 @@
 import Image from "next/image";
-import { partners } from "@/data/site";
+import { defaultSiteContent, type SiteContent, type SiteContentPartner } from "@/data/site";
 
-type PartnerLogo = {
-  name: string;
-  logo: string;
-};
-
-function LogoCell({ partner, hidden = false, className = "" }: { partner: PartnerLogo; hidden?: boolean; className?: string }) {
+function LogoCell({ partner, hidden = false, className = "" }: { partner: SiteContentPartner; hidden?: boolean; className?: string }) {
   return (
     <div className={`logo-cell ${className}`} aria-hidden={hidden || undefined}>
       <Image
@@ -28,8 +23,14 @@ const partnerTitleClass = "font-display text-[30px] font-black leading-none text
 const partnerCountClass =
   "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-full bg-[#EEF1F6] px-5 text-sm font-black text-brand-600 sm:min-h-12 sm:text-base lg:min-h-14 lg:px-6 lg:text-lg";
 
-export function PartnersSection() {
-  const exhibitorLoop = [...partners.exhibitors, ...partners.exhibitors];
+type PartnersSectionProps = {
+  site?: SiteContent;
+};
+
+export function PartnersSection({ site = defaultSiteContent }: PartnersSectionProps) {
+  const section = site.partnersSection;
+  const { government, finance, exhibitors, media } = section.groups;
+  const exhibitorLoop = [...exhibitors.items, ...exhibitors.items];
 
   return (
     <section id="seredo-partners" className="section-pad relative overflow-hidden bg-white">
@@ -38,22 +39,22 @@ export function PartnersSection() {
         <div className="reveal mx-auto mb-12 max-w-3xl text-center">
           <span className="eyebrow">
             <span className="eyebrow-dot" />
-            شركاء النجاح
+            {section.eyebrow}
           </span>
-          <h2 className="section-title mt-5">شركاء الدورات السابقة</h2>
+          <h2 className="section-title mt-5">{section.title}</h2>
           <p className="section-copy mx-auto">
-            جهات ساهمت في تعزيز حضور سيريدو عبر دوراته السابقة، ضمن منظومة تجمع الجهات الحكومية، التمويلية، العارضين، والشركاء الإعلاميين.
+            {section.description}
           </p>
         </div>
 
         <div className="space-y-10 lg:space-y-12">
           <article className={partnerGroupClass}>
             <div className={partnerHeadClass}>
-              <h3 className={partnerTitleClass}>جهات حكومية</h3>
-              <span className={partnerCountClass}>3 جهات</span>
+              <h3 className={partnerTitleClass}>{government.title}</h3>
+              <span className={partnerCountClass}>{government.countLabel}</span>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:gap-5">
-              {partners.government.map((partner) => (
+              {government.items.map((partner) => (
                 <LogoCell key={partner.name} partner={partner} />
               ))}
             </div>
@@ -61,11 +62,11 @@ export function PartnersSection() {
 
           <article className={partnerGroupClass} data-delay="1">
             <div className={partnerHeadClass}>
-              <h3 className={partnerTitleClass}>البنوك وشركات التمويل</h3>
-              <span className={partnerCountClass}>جهات تمويلية</span>
+              <h3 className={partnerTitleClass}>{finance.title}</h3>
+              <span className={partnerCountClass}>{finance.countLabel}</span>
             </div>
             <div className="grid w-full gap-4 sm:grid-cols-2 lg:me-auto lg:w-[min(100%,1220px)] lg:gap-5">
-              {partners.finance.map((partner) => (
+              {finance.items.map((partner) => (
                 <LogoCell key={partner.name} partner={partner} />
               ))}
             </div>
@@ -73,8 +74,8 @@ export function PartnersSection() {
 
           <article className={partnerGroupClass} data-delay="2">
             <div className={partnerHeadClass}>
-              <h3 className={partnerTitleClass}>العارضون</h3>
-              <span className={partnerCountClass}>شريط متحرك</span>
+              <h3 className={partnerTitleClass}>{exhibitors.title}</h3>
+              <span className={partnerCountClass}>{exhibitors.countLabel}</span>
             </div>
             <div className="marquee-mask relative overflow-hidden rounded-[22px] py-1" aria-label="شعارات العارضين">
               <div className="marquee-track hover:[animation-play-state:paused]">
@@ -82,7 +83,7 @@ export function PartnersSection() {
                   <LogoCell
                     key={`${partner.name}-${index}`}
                     partner={partner}
-                    hidden={index >= partners.exhibitors.length}
+                    hidden={index >= exhibitors.items.length}
                     className="min-h-28 w-44 shrink-0 p-4"
                   />
                 ))}
@@ -92,11 +93,11 @@ export function PartnersSection() {
 
           <article className={partnerGroupClass} data-delay="3">
             <div className={partnerHeadClass}>
-              <h3 className={partnerTitleClass}>الشركاء الإعلاميون</h3>
-              <span className={partnerCountClass}>Media Partners</span>
+              <h3 className={partnerTitleClass}>{media.title}</h3>
+              <span className={partnerCountClass}>{media.countLabel}</span>
             </div>
             <div className="grid w-full gap-4 sm:grid-cols-2 lg:me-auto lg:w-[min(100%,1220px)] lg:gap-5">
-              {partners.media.map((partner) => (
+              {media.items.map((partner) => (
                 <LogoCell key={partner.name} partner={partner} />
               ))}
             </div>

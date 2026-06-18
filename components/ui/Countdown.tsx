@@ -10,13 +10,21 @@ type CountdownValue = {
   seconds: string;
 };
 
-const targetTime = new Date("2026-09-06T14:00:00+03:00").getTime();
+type CountdownProps = {
+  targetDate?: string;
+  title?: string;
+  location?: string;
+  daysLabel?: string;
+  hoursLabel?: string;
+  minutesLabel?: string;
+  secondsLabel?: string;
+};
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
-function getCountdown(): CountdownValue {
+function getCountdown(targetTime: number): CountdownValue {
   const diff = targetTime - Date.now();
 
   if (diff <= 0) {
@@ -36,29 +44,39 @@ function getCountdown(): CountdownValue {
   };
 }
 
-export function Countdown() {
-  const [value, setValue] = useState<CountdownValue>(() => getCountdown());
+export function Countdown({
+  targetDate = "2026-09-06T14:00:00+03:00",
+  title = "العد التنازلي لانطلاق سيريدو",
+  location = "جدة · المملكة العربية السعودية",
+  daysLabel = "أيام",
+  hoursLabel = "ساعات",
+  minutesLabel = "دقائق",
+  secondsLabel = "ثواني",
+}: CountdownProps) {
+  const targetTime = new Date(targetDate).getTime();
+  const safeTargetTime = Number.isFinite(targetTime) ? targetTime : new Date("2026-09-06T14:00:00+03:00").getTime();
+  const [value, setValue] = useState<CountdownValue>(() => getCountdown(safeTargetTime));
 
   useEffect(() => {
-    setValue(getCountdown());
-    const interval = window.setInterval(() => setValue(getCountdown()), 1_000);
+    setValue(getCountdown(safeTargetTime));
+    const interval = window.setInterval(() => setValue(getCountdown(safeTargetTime)), 1_000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [safeTargetTime]);
 
   const items = [
-    { label: "أيام", value: value.days },
-    { label: "ساعات", value: value.hours },
-    { label: "دقائق", value: value.minutes },
-    { label: "ثواني", value: value.seconds },
+    { label: daysLabel, value: value.days },
+    { label: hoursLabel, value: value.hours },
+    { label: minutesLabel, value: value.minutes },
+    { label: secondsLabel, value: value.seconds },
   ];
 
   return (
     <div aria-live="polite" className="rounded-[24px] border border-brand-600/10 bg-white/95 p-4 shadow-soft backdrop-blur sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
-        <span className="font-black text-brand-900 sm:text-base">العد التنازلي لانطلاق سيريدو</span>
+        <span className="font-black text-brand-900 sm:text-base">{title}</span>
         <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
           <MapPin size={15} className="text-brand-600" aria-hidden="true" />
-          جدة · المملكة العربية السعودية
+          {location}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">

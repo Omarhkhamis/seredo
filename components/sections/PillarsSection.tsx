@@ -1,16 +1,22 @@
 import { ArrowLeft } from "lucide-react";
-import { pillars } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 
-export function PillarsSection() {
+type PillarsSectionProps = {
+  site?: SiteContent;
+};
+
+export function PillarsSection({ site = defaultSiteContent }: PillarsSectionProps) {
+  const section = site.pillarsSection;
+
   return (
     <section className="section-pad bg-white">
       <div className="section-container">
         <div className="reveal mb-10 max-w-3xl">
-          <h2 className="section-title">ستة محاور تصنع تجربة عقارية متكاملة</h2>
+          <h2 className="section-title">{section.title}</h2>
         </div>
 
         <div className="border-t border-line" role="list">
-          {pillars.map((pillar, index) => (
+          {section.items.map((pillar, index) => (
             <div
               key={pillar}
               className="reveal grid grid-cols-[auto_1fr_auto] items-center gap-4 border-b border-line py-5 transition hover:bg-surface sm:gap-6 sm:px-3"

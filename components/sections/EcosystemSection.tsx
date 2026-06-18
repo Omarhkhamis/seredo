@@ -1,25 +1,31 @@
 import Image from "next/image";
 import { BookOpen, ChartLine, Compass, Handshake, Target } from "lucide-react";
-import { assets, ecosystemCards } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 import { cn } from "@/components/ui/cn";
 
 const cardIcons = [Target, Handshake, ChartLine, BookOpen, Compass];
 
-export function EcosystemSection() {
+type EcosystemSectionProps = {
+  site?: SiteContent;
+};
+
+export function EcosystemSection({ site = defaultSiteContent }: EcosystemSectionProps) {
+  const { assets, ecosystemSection: section } = site;
+
   return (
     <section className="section-pad bg-gradient-to-b from-surface to-mist">
       <div className="section-container">
         <div className="reveal mb-10 max-w-3xl">
-          <h2 className="section-title">منظومة أعمال عقارية متكاملة</h2>
+          <h2 className="section-title">{section.title}</h2>
           <p className="section-copy">
-            لا يقتصر سيريدو على كونه مساحة لعرض المشاريع العقارية، بل يمثل بيئة متخصصة تجمع بين الاستثمار، المعرفة، العلاقات المهنية، وفرص النمو التجاري.
+            {section.description}
           </p>
         </div>
 
         <figure className="reveal relative mb-6 h-[280px] overflow-hidden rounded-lg border border-line shadow-soft sm:h-[380px] lg:h-[430px]" data-delay="1">
           <Image
             src={assets.networkImage}
-            alt="لقاء مهني يعبر عن منظومة الأعمال والشراكات في سيريدو"
+            alt={section.imageAlt}
             fill
             sizes="100vw"
             className="object-cover"
@@ -28,7 +34,7 @@ export function EcosystemSection() {
         </figure>
 
         <div className="grid gap-4 md:grid-cols-6">
-          {ecosystemCards.map((card, index) => {
+          {section.cards.map((card, index) => {
             const Icon = cardIcons[index] ?? Target;
 
             return (

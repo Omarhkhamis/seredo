@@ -1,14 +1,18 @@
 import { CalendarDays, Clock3, MapPin, MapPinned } from "lucide-react";
-import { eventDetails } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 
 const icons = [CalendarDays, Clock3, MapPinned, MapPin];
 
-export function EventInfoSection() {
+type EventInfoSectionProps = {
+  site?: SiteContent;
+};
+
+export function EventInfoSection({ site = defaultSiteContent }: EventInfoSectionProps) {
   return (
     <section aria-label="معلومات الحدث" className="border-y border-line bg-white py-9">
       <div className="section-container">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {eventDetails.map((item, index) => {
+          {site.eventInfo.items.map((item, index) => {
             const Icon = icons[index] ?? MapPin;
             const content = (
               <>

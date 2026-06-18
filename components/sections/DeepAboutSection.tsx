@@ -1,29 +1,29 @@
-import { deepAbout } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 
-const sideStats = [
-  { value: "5", label: "دورات متتالية من الحضور المتنامي والتوسع المستمر" },
-  { value: "3 أيام", label: "برنامج متكامل من العرض، اللقاءات، والمحتوى المعرفي" },
-  { value: "جدة", label: "قلب القطاع العقاري في المملكة العربية السعودية", dark: true },
-];
+type DeepAboutSectionProps = {
+  site?: SiteContent;
+};
 
-export function DeepAboutSection() {
+export function DeepAboutSection({ site = defaultSiteContent }: DeepAboutSectionProps) {
+  const section = site.deepAboutSection;
+
   return (
     <section className="section-pad bg-white">
       <div className="section-container grid gap-10 lg:grid-cols-[1.35fr_0.65fr] lg:gap-16">
         <div className="reveal">
-          <h2 className="section-title">وجهة تجمع بين المستثمرين والمطورين والمهتمين بالقطاع العقاري</h2>
-          <p className="mt-6 text-base leading-9 text-ink/90 sm:text-lg">{deepAbout.intro}</p>
+          <h2 className="section-title">{section.title}</h2>
+          <p className="mt-6 text-base leading-9 text-ink/90 sm:text-lg">{section.intro}</p>
 
-          <h3 className="mt-9 text-2xl text-ink">عن سيريدو</h3>
+          <h3 className="mt-9 text-2xl text-ink">{section.subheading}</h3>
           <div className="mt-4 space-y-5 text-base leading-9 text-ink/90 sm:text-lg">
-            {deepAbout.paragraphs.map((paragraph) => (
+            {section.paragraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
         </div>
 
         <aside className="reveal grid gap-3 lg:sticky lg:top-28 lg:self-start" data-delay="2">
-          {sideStats.map((item) => (
+          {section.sideStats.map((item) => (
             <div
               key={item.value}
               className={

@@ -3,13 +3,18 @@
 import Image from "next/image";
 import { ArrowLeft, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { assets, links, navItems } from "@/data/site";
+import { defaultSiteContent, type SiteContent } from "@/data/site";
 import { cn } from "@/components/ui/cn";
 
-export function Header() {
+type HeaderProps = {
+  site?: SiteContent;
+};
+
+export function Header({ site = defaultSiteContent }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const { assets, header, links } = site;
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 12);
@@ -35,11 +40,11 @@ export function Header() {
           onClick={() => setIsOpen(false)}
         >
           {logoFailed ? (
-            <span className="font-display text-xl font-black text-brand-700">SEREDO EXPO</span>
+            <span className="font-display text-xl font-black text-brand-700">{header.fallbackLogoText}</span>
           ) : (
             <Image
               src={assets.logo}
-              alt="سيريدو SEREDO Expo"
+              alt={header.logoAlt}
               width={210}
               height={80}
               priority
@@ -56,10 +61,10 @@ export function Header() {
             isOpen
               ? "translate-y-0 opacity-100"
               : "pointer-events-none -translate-y-2 opacity-0 lg:pointer-events-auto lg:translate-y-0 lg:opacity-100",
-          )}
+            )}
         >
           <ul className="grid gap-2 lg:flex lg:items-center lg:justify-center lg:gap-7">
-            {navItems.map((item) => (
+            {header.navItems.map((item) => (
               <li key={item.href}>
                 <a
                   href={item.href}
@@ -75,10 +80,10 @@ export function Header() {
 
         <div className="hidden items-center justify-end gap-3 lg:flex">
           <a className="btn btn-outline min-h-[58px] px-8 text-base" href={links.visitorRegistration}>
-            سجّل كزائر
+            {header.visitorButton}
           </a>
           <a className="btn btn-primary min-h-[58px] px-9 text-base" href={links.exhibitorRegistration}>
-            سجّل كعارض
+            {header.exhibitorButton}
             <ArrowLeft size={18} aria-hidden="true" />
           </a>
         </div>
@@ -86,7 +91,7 @@ export function Header() {
         <button
           type="button"
           className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-soft lg:hidden"
-          aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
+          aria-label={isOpen ? header.menuCloseLabel : header.menuOpenLabel}
           aria-expanded={isOpen}
           onClick={() => setIsOpen((open) => !open)}
         >
