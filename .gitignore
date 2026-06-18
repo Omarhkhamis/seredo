@@ -9,6 +9,7 @@ next-env.d.ts.bak
 # production/build output
 dist/
 build/
+storage/
 
 # local env files
 .env

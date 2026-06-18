@@ -329,10 +329,13 @@ export async function updateAdminUser(id: string, email: string, password?: stri
 }
 
 export function getAdminSessionCookieOptions(maxAge = SESSION_MAX_AGE_SECONDS) {
+  const secureCookie =
+    process.env.ADMIN_COOKIE_SECURE === "false" ? false : process.env.NODE_ENV === "production";
+
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: secureCookie,
     path: "/",
     maxAge,
   };

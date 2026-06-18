@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: seredo-next
+    container_name: ${APP_CONTAINER_NAME:-seredo-next}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -14,12 +14,15 @@ services:
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-seredo}
       POSTGRES_SSL: "false"
+      ADMIN_COOKIE_SECURE: ${ADMIN_COOKIE_SECURE:-true}
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    volumes:
+      - seredo_uploads:/app/storage/uploads
 
   postgres:
     image: postgres:16-alpine
-    container_name: seredo-postgres
+    container_name: ${POSTGRES_CONTAINER_NAME:-seredo-postgres}
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-seredo}
@@ -37,3 +40,6 @@ services:
 
 volumes:
   seredo_postgres_data:
+    name: ${POSTGRES_VOLUME_NAME:-seredo_postgres_data}
+  seredo_uploads:
+    name: ${UPLOADS_VOLUME_NAME:-seredo_uploads}

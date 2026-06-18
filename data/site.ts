@@ -1,10 +1,11 @@
+import { defaultSecondaryPages } from "@/data/secondary-pages";
+
 const siteLinks = {
   site: "https://seredoexpo.sa/",
-  exhibitorsPage: "https://seredoexpo.sa/%d8%a7%d9%84%d8%b9%d8%a7%d8%b1%d8%b6%d9%8a%d9%86/",
-  visitorsPage:
-    "https://seredoexpo.sa/%d8%b5%d9%81%d8%ad%d8%a9-%d9%84%d9%84%d8%b2%d9%88%d8%a7%d8%b1-visitors/",
-  sponsorsPage:
-    "https://seredoexpo.sa/%d8%b5%d9%81%d8%ad%d8%a9-%d8%a7%d9%84%d8%b1%d8%b9%d8%a7%d8%a9/",
+  exhibitorsPage: "/exhibitors",
+  visitorsPage: "/visitors",
+  sponsorsPage: "/sponsors",
+  mediaPage: "/media",
   visitorRegistration:
     "https://script.google.com/macros/s/AKfycbxKVYPvF26btP_zFUjQnoKpNjyE-3TTQPbjJxwZ7S90BloZzu_Q6Fy8GPIFvUmksNA/exec",
   exhibitorRegistration:
@@ -14,8 +15,7 @@ const siteLinks = {
   map: "https://maps.app.goo.gl/BDAdGUmSBW4FYHHZ8?g_st=aw",
   footerMap: "https://maps.app.goo.gl/6Bb85dSh73G5daeE8",
   whatsapp: "https://wa.me/966580080464",
-  privacy:
-    "https://seredoexpo.sa/%D8%B3%D9%8A%D8%A7%D8%B3%D8%A9-%D8%A7%D9%84%D8%AE%D8%B5%D9%88%D8%B5%D9%8A%D8%A9/",
+  privacy: "/privacy",
   email: "mailto:info@eventify-organizer.com",
   phone: "tel:+966580080464",
 };
@@ -49,11 +49,12 @@ export const defaultSiteContent = {
     visitorButton: "سجّل كزائر",
     exhibitorButton: "سجّل كعارض",
     navItems: [
-      { label: "الصفحة الرئيسية", href: "#seredo-top" },
+      { label: "الصفحة الرئيسية", href: "/#seredo-top" },
       { label: "العارضين", href: siteLinks.exhibitorsPage },
       { label: "الزوار", href: siteLinks.visitorsPage },
       { label: "الرعايات", href: siteLinks.sponsorsPage },
-      { label: "تواصل معنا", href: "#seredo-contact" },
+      { label: "المركز الإعلامي", href: siteLinks.mediaPage },
+      { label: "تواصل معنا", href: "/#seredo-contact" },
     ],
   },
   hero: {
@@ -67,11 +68,11 @@ export const defaultSiteContent = {
     ],
     primaryButton: {
       label: "سجّل كزائر",
-      href: siteLinks.visitorRegistration,
+      href: siteLinks.visitorsPage,
     },
     secondaryButton: {
       label: "سجّل كعارض",
-      href: siteLinks.exhibitorRegistration,
+      href: siteLinks.exhibitorsPage,
     },
     imageAlt: "لقطة علوية من معرض سيريدو تظهر أجنحة العارضين وزوار المعرض",
     figureTitle: "حيث تلتقي العمارة بالاستثمار",
@@ -378,7 +379,7 @@ export const defaultSiteContent = {
     description:
       "سجّل حضورك كزائر، أو شارك كعارض أو راعٍ، أو تواصل معنا لاستكشاف فرص التعاون والشراكات الاستراتيجية.",
     buttons: [
-      { label: "سجّل كزائر", href: siteLinks.visitorRegistration, variant: "primary" },
+      { label: "سجّل كزائر", href: siteLinks.visitorsPage, variant: "primary" },
       { label: "كن راعياً", href: siteLinks.sponsorsPage, variant: "accent" },
       { label: "تواصل معنا", href: siteLinks.whatsapp, variant: "outline" },
     ],
@@ -411,7 +412,8 @@ export const defaultSiteContent = {
       { label: "الزوار", href: siteLinks.visitorsPage },
       { label: "الرعايات", href: siteLinks.sponsorsPage },
       { label: "العارضون", href: siteLinks.exhibitorsPage },
-      { label: "عن سيريدو", href: "#seredo-about" },
+      { label: "المركز الإعلامي", href: siteLinks.mediaPage },
+      { label: "عن سيريدو", href: "/#seredo-about" },
       { label: "تواصل معنا", href: siteLinks.whatsapp },
       { label: "سياسة الخصوصية", href: siteLinks.privacy },
     ],
@@ -423,6 +425,7 @@ export const defaultSiteContent = {
     { label: "X", href: "https://x.com/seredoexposa", short: "X" },
     { label: "YouTube", href: "https://www.youtube.com/@seredoexposa", short: "YT" },
   ],
+  secondaryPages: defaultSecondaryPages,
 };
 
 export type SiteContent = typeof defaultSiteContent;

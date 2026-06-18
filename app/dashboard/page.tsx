@@ -4,7 +4,7 @@ import {
   getCurrentAdminFromCookies,
   listAdminUsers,
 } from "@/lib/admin-auth";
-import { getSiteContent, hasDatabaseConnection } from "@/lib/site-content";
+import { getSiteContent } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,6 @@ export default async function DashboardPage() {
   return (
     <SiteDashboard
       initialContent={content}
-      databaseConfigured={hasDatabaseConnection()}
       currentAdmin={currentAdmin}
       initialAdmins={admins}
     />

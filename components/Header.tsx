@@ -10,6 +10,10 @@ type HeaderProps = {
   site?: SiteContent;
 };
 
+function normalizeInternalHref(href: string) {
+  return href.startsWith("#") ? `/${href}` : href;
+}
+
 export function Header({ site = defaultSiteContent }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -34,7 +38,7 @@ export function Header({ site = defaultSiteContent }: HeaderProps) {
     >
       <div className="section-container grid h-[78px] grid-cols-[auto_auto] items-center justify-between gap-4 lg:h-[104px] lg:grid-cols-[auto_1fr_auto] lg:gap-7">
         <a
-          href="#seredo-top"
+          href="/#seredo-top"
           aria-label="سيريدو"
           className="flex min-w-0 items-center"
           onClick={() => setIsOpen(false)}
@@ -67,7 +71,7 @@ export function Header({ site = defaultSiteContent }: HeaderProps) {
             {header.navItems.map((item) => (
               <li key={item.href}>
                 <a
-                  href={item.href}
+                  href={normalizeInternalHref(item.href)}
                   onClick={() => setIsOpen(false)}
                   className="flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-extrabold text-ink transition hover:bg-brand-50 hover:text-brand-700 lg:min-h-0 lg:bg-transparent lg:px-0 lg:text-base lg:hover:bg-transparent"
                 >
@@ -79,10 +83,10 @@ export function Header({ site = defaultSiteContent }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center justify-end gap-3 lg:flex">
-          <a className="btn btn-outline min-h-[58px] px-8 text-base" href={links.visitorRegistration}>
+          <a className="btn btn-outline min-h-[58px] px-8 text-base" href={links.visitorsPage}>
             {header.visitorButton}
           </a>
-          <a className="btn btn-primary min-h-[58px] px-9 text-base" href={links.exhibitorRegistration}>
+          <a className="btn btn-primary min-h-[58px] px-9 text-base" href={links.exhibitorsPage}>
             {header.exhibitorButton}
             <ArrowLeft size={18} aria-hidden="true" />
           </a>

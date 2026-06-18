@@ -2,38 +2,62 @@
 
 import {
   AlertCircle,
+  ArrowLeft,
+  Award,
   BarChart3,
+  BookOpen,
+  BriefcaseBusiness,
   Building2,
   CalendarDays,
   CheckCircle2,
-  Database,
+  ChevronDown,
+  Crown,
   Eye,
   FileText,
+  Gem,
+  Globe,
   Handshake,
+  Home,
   Image,
+  ImagePlus,
+  IdCard,
   Info,
   Layers,
   Link,
   ListChecks,
   Loader2,
   LogOut,
+  MailOpen,
+  Medal,
   Megaphone,
   Menu,
+  MessageSquare,
+  Newspaper,
   Plus,
   RefreshCw,
   Save,
   Share2,
   ShieldCheck,
+  Star,
+  Store,
+  Settings,
+  Ticket,
   Trash2,
+  Upload,
+  UserRoundCheck,
+  Video,
+  X,
+  type LucideIcon,
   UsersRound,
 } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
-import { defaultSiteContent, type SiteContent } from "@/data/site";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Swal from "sweetalert2";
+import { type SiteContent } from "@/data/site";
 import { cn } from "@/components/ui/cn";
 
 type PathPart = string | number;
 type Path = PathPart[];
-type FieldType = "text" | "textarea" | "url" | "number" | "password" | "checkbox" | "select";
+type FieldType = "text" | "textarea" | "url" | "number" | "password" | "checkbox" | "select" | "icon" | "image";
 
 type FieldDef = {
   key: string;
@@ -44,7 +68,6 @@ type FieldDef = {
 
 type SiteDashboardProps = {
   initialContent: SiteContent;
-  databaseConfigured: boolean;
   currentAdmin: CurrentAdmin;
   initialAdmins: AdminUser[];
 };
@@ -61,16 +84,34 @@ type CurrentAdmin = {
   email: string;
 };
 type AdminDrafts = Record<string, { email: string; password: string }>;
+type GalleryImage = {
+  src: string;
+  name: string;
+  origin: "assets" | "uploads";
+  deletable: boolean;
+  size?: number;
+  updatedAt?: string;
+};
+type GalleryTarget = {
+  value: string;
+  onSelect: (src: string) => void;
+} | null;
 
 const sections = [
   { id: "metadata", label: "البيانات الأساسية", icon: FileText },
   { id: "links-assets", label: "الروابط والأصول", icon: Link },
+  { id: "gallery", label: "معرض الصور", icon: ImagePlus },
   { id: "header", label: "الهيدر والتنقل", icon: Menu },
   { id: "hero", label: "الهيرو", icon: Image },
   { id: "event", label: "معلومات الحدث", icon: CalendarDays },
   { id: "about", label: "عن سيريدو", icon: Info },
   { id: "pillars", label: "المحاور", icon: ListChecks },
   { id: "tracks", label: "مسارات التسجيل", icon: Building2 },
+  { id: "visitors-page", label: "صفحة الزوار", icon: UsersRound },
+  { id: "exhibitors-page", label: "صفحة العارضين", icon: Building2 },
+  { id: "sponsors-page", label: "صفحة الرعاة", icon: Handshake },
+  { id: "media-page", label: "المركز الإعلامي", icon: Newspaper },
+  { id: "privacy-page", label: "سياسة الخصوصية", icon: ShieldCheck },
   { id: "deep-about", label: "عن سيريدو الموسع", icon: Layers },
   { id: "ecosystem", label: "منظومة الأعمال", icon: Handshake },
   { id: "stats", label: "الإحصائيات", icon: BarChart3 },
@@ -83,11 +124,59 @@ const sections = [
   { id: "admins", label: "المدراء", icon: ShieldCheck },
 ] as const;
 
+type SectionId = (typeof sections)[number]["id"];
+type DashboardGroupId = "main" | "pages" | "settings";
+
+const dashboardGroups: Array<{
+  id: DashboardGroupId;
+  label: string;
+  icon: LucideIcon;
+  sectionIds: SectionId[];
+}> = [
+  {
+    id: "main",
+    label: "الرئيسية",
+    icon: Home,
+    sectionIds: [
+      "hero",
+      "event",
+      "about",
+      "pillars",
+      "tracks",
+      "deep-about",
+      "ecosystem",
+      "stats",
+      "audience",
+      "sectors",
+      "partners",
+      "final-cta",
+    ],
+  },
+  {
+    id: "pages",
+    label: "الصفحات",
+    icon: FileText,
+    sectionIds: ["visitors-page", "exhibitors-page", "sponsors-page", "media-page", "privacy-page"],
+  },
+  {
+    id: "settings",
+    label: "باقي الإعدادات",
+    icon: Settings,
+    sectionIds: ["metadata", "links-assets", "gallery", "header", "footer", "social", "admins"],
+  },
+];
+
+const sectionsById = Object.fromEntries(sections.map((section) => [section.id, section])) as Record<
+  SectionId,
+  (typeof sections)[number]
+>;
+
 const linkLabels: Record<string, string> = {
   site: "رابط الموقع",
   exhibitorsPage: "صفحة العارضين",
   visitorsPage: "صفحة الزوار",
   sponsorsPage: "صفحة الرعايات",
+  mediaPage: "المركز الإعلامي",
   visitorRegistration: "رابط تسجيل الزائر",
   exhibitorRegistration: "رابط تسجيل العارض",
   profile: "رابط البروفايل",
@@ -114,6 +203,94 @@ const buttonVariantOptions = [
   { label: "مميز", value: "accent" },
   { label: "حدود", value: "outline" },
 ];
+
+const sponsorIconOptions = [
+  { label: "كرة أرضية", value: "globe" },
+  { label: "تسويق", value: "megaphone" },
+  { label: "بريد", value: "mail" },
+  { label: "مشاركة", value: "share" },
+  { label: "بطاقة", value: "id-card" },
+  { label: "جناح", value: "store" },
+  { label: "VIP", value: "vip" },
+  { label: "تذاكر", value: "ticket" },
+  { label: "دليل", value: "book" },
+  { label: "فيديو", value: "video" },
+  { label: "درع", value: "award" },
+  { label: "تقرير", value: "chart" },
+  { label: "نجمة", value: "star" },
+  { label: "ميدالية", value: "medal" },
+  { label: "ماسة", value: "gem" },
+  { label: "تاج", value: "crown" },
+  { label: "رسالة", value: "message" },
+  { label: "سهم", value: "arrow" },
+];
+
+const sponsorIconMap: Record<string, LucideIcon> = {
+  globe: Globe,
+  megaphone: Megaphone,
+  mail: MailOpen,
+  share: Share2,
+  "id-card": IdCard,
+  store: Store,
+  vip: UserRoundCheck,
+  ticket: Ticket,
+  book: BookOpen,
+  video: Video,
+  award: Award,
+  chart: BarChart3,
+  star: Star,
+  medal: Medal,
+  gem: Gem,
+  crown: Crown,
+  message: MessageSquare,
+  arrow: ArrowLeft,
+};
+
+const socialPlatforms = [
+  {
+    label: "TikTok",
+    short: "TT",
+    valueLabel: "اسم مستخدم TikTok",
+    placeholder: "seredoexpoksa",
+    hrefPrefix: "https://www.tiktok.com/@",
+    trailingSlash: false,
+  },
+  {
+    label: "LinkedIn",
+    short: "in",
+    valueLabel: "معرّف صفحة LinkedIn",
+    placeholder: "seredoexpo26",
+    hrefPrefix: "https://www.linkedin.com/company/",
+    trailingSlash: true,
+  },
+  {
+    label: "Instagram",
+    short: "IG",
+    valueLabel: "اسم مستخدم Instagram",
+    placeholder: "seredoexpoksa",
+    hrefPrefix: "https://www.instagram.com/",
+    trailingSlash: false,
+  },
+  {
+    label: "X",
+    short: "X",
+    valueLabel: "اسم مستخدم X",
+    placeholder: "seredoexposa",
+    hrefPrefix: "https://x.com/",
+    trailingSlash: false,
+  },
+  {
+    label: "YouTube",
+    short: "YT",
+    valueLabel: "معرّف قناة YouTube",
+    placeholder: "seredoexposa",
+    hrefPrefix: "https://www.youtube.com/@",
+    trailingSlash: false,
+  },
+] as const;
+
+type SocialPlatform = (typeof socialPlatforms)[number];
+type SocialLink = SiteContent["socialLinks"][number];
 
 function buildAdminDrafts(admins: AdminUser[]): AdminDrafts {
   return Object.fromEntries(admins.map((admin) => [admin.id, { email: admin.email, password: "" }]));
@@ -194,18 +371,277 @@ function normalizeFieldValue(type: FieldType, value: string | boolean) {
   return String(value);
 }
 
+function showSaveToast(title = "تم الحفظ بنجاح") {
+  void Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon: "success",
+    title,
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    background: "#ecfdf5",
+    color: "#065f46",
+  });
+}
+
+async function confirmDelete(title = "تأكيد الحذف") {
+  const result = await Swal.fire({
+    title,
+    text: "لا يمكن التراجع عن هذا الإجراء بعد الحفظ.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "حذف",
+    cancelButtonText: "إلغاء",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#64748b",
+    reverseButtons: true,
+    focusCancel: true,
+  });
+
+  return result.isConfirmed;
+}
+
+function findSocialPlatform(label: string) {
+  const normalized = label.trim().toLowerCase();
+
+  return socialPlatforms.find((platform) => platform.label.toLowerCase() === normalized);
+}
+
+function buildSocialHref(platform: SocialPlatform, rawValue: string) {
+  const value = rawValue.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  const handle = value.replace(/^@+/, "").replace(/^\/+|\/+$/g, "");
+  const suffix = platform.trailingSlash ? "/" : "";
+
+  return `${platform.hrefPrefix}${encodeURI(handle)}${suffix}`;
+}
+
+function socialValueFromHref(platform: SocialPlatform, href: string) {
+  const value = href.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  if (value.startsWith(platform.hrefPrefix)) {
+    return decodeURI(value.slice(platform.hrefPrefix.length).replace(/\/+$/g, ""));
+  }
+
+  return value;
+}
+
+function normalizeSocialLinks(links: SocialLink[]) {
+  const used = new Set<string>();
+  const normalized: SocialLink[] = [];
+
+  for (const link of links) {
+    const platform = findSocialPlatform(link.label);
+
+    if (!platform || used.has(platform.label)) {
+      continue;
+    }
+
+    used.add(platform.label);
+    normalized.push({
+      label: platform.label,
+      short: platform.short,
+      href: link.href ?? "",
+    });
+  }
+
+  return normalized;
+}
+
+const imageAssetKeys = new Set(["logo", "heroPoster", "aboutImage", "networkImage", "venueLogo", "organizerLogo"]);
+const imageObjectKeys = new Set(["logo", "image"]);
+
+function isImageAssetKey(key: string) {
+  return imageAssetKeys.has(key);
+}
+
+function isImageObjectField(field: FieldDef) {
+  return field.type === "image" || imageObjectKeys.has(field.key);
+}
+
+function dedupeGalleryImages(images: GalleryImage[]) {
+  const seen = new Set<string>();
+
+  return images.filter((image) => {
+    if (seen.has(image.src)) {
+      return false;
+    }
+
+    seen.add(image.src);
+    return true;
+  });
+}
+
+function formatFileSize(size?: number) {
+  if (!size || !Number.isFinite(size)) {
+    return "";
+  }
+
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${Math.round(size / 1024)} KB`;
+  }
+
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function sanitizeSiteContent(content: SiteContent) {
+  const next = clone(content);
+  next.socialLinks = normalizeSocialLinks(next.socialLinks);
+
+  return next;
+}
+
+function DashboardIconPicker({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: unknown;
+  options: Array<{ label: string; value: string }>;
+  onChange: (value: unknown) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedValue = fieldValue(value) || options[0]?.value || "";
+  const selectedOption = options.find((option) => option.value === selectedValue) ?? options[0];
+  const SelectedIcon = sponsorIconMap[selectedOption?.value ?? ""] ?? BriefcaseBusiness;
+
+  return (
+    <div className="relative block text-sm font-extrabold text-ink">
+      <span>{label}</span>
+      <button
+        type="button"
+        aria-label={`${label}: ${selectedOption?.label ?? selectedValue}`}
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        className="mt-2 flex h-[50px] w-full items-center justify-center rounded-md border border-line bg-white px-3 text-brand-700 shadow-sm transition hover:border-brand-600/40 hover:bg-brand-50 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/10"
+      >
+        <SelectedIcon size={24} strokeWidth={2.4} aria-hidden="true" />
+      </button>
+
+      {isOpen ? (
+        <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-lg border border-line bg-white p-3 shadow-strong">
+          <div className="grid grid-cols-6 gap-2">
+            {options.map((option) => {
+              const Icon = sponsorIconMap[option.value] ?? BriefcaseBusiness;
+              const isSelected = option.value === selectedValue;
+
+              return (
+                <button
+                  type="button"
+                  key={option.value}
+                  title={option.label}
+                  aria-label={option.label}
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "flex h-11 w-full items-center justify-center rounded-md border transition",
+                    isSelected
+                      ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                      : "border-line bg-surface text-brand-700 hover:border-brand-600/40 hover:bg-brand-50",
+                  )}
+                >
+                  <Icon size={21} strokeWidth={2.35} aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DashboardImageField({
+  label,
+  value,
+  onChange,
+  onOpenGallery,
+}: {
+  label: string;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  onOpenGallery?: (value: string, onSelect: (src: string) => void) => void;
+}) {
+  const src = fieldValue(value);
+
+  return (
+    <div className="block text-sm font-extrabold text-ink">
+      <span>{label}</span>
+      <div className="mt-2 rounded-md border border-line bg-white p-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border border-line bg-mist">
+            {src ? (
+              <img src={src} alt="" className="h-full w-full object-contain" />
+            ) : (
+              <Image size={26} className="text-muted" aria-hidden="true" />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-bold text-muted">{src || "لم يتم اختيار صورة"}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onOpenGallery?.(src, (nextSrc) => onChange(nextSrc))}
+                className="inline-flex min-h-10 items-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-brand-800"
+              >
+                <ImagePlus size={15} aria-hidden="true" />
+                المعرض
+              </button>
+              {src ? (
+                <button
+                  type="button"
+                  onClick={() => onChange("")}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-muted transition hover:bg-mist hover:text-ink"
+                  aria-label={`إزالة ${label}`}
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardField({
   label,
   value,
   type = "text",
   options = [],
   onChange,
+  onOpenGallery,
 }: {
   label: string;
   value: unknown;
   type?: FieldType;
   options?: Array<{ label: string; value: string }>;
   onChange: (value: unknown) => void;
+  onOpenGallery?: (value: string, onSelect: (src: string) => void) => void;
 }) {
   const controlClass =
     "mt-2 w-full rounded-md border border-line bg-white px-3 py-2.5 text-sm text-ink shadow-sm transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/10";
@@ -222,6 +658,14 @@ function DashboardField({
         />
       </label>
     );
+  }
+
+  if (type === "icon") {
+    return <DashboardIconPicker label={label} value={value} options={options} onChange={onChange} />;
+  }
+
+  if (type === "image") {
+    return <DashboardImageField label={label} value={value} onChange={onChange} onOpenGallery={onOpenGallery} />;
   }
 
   if (type === "textarea") {
@@ -291,15 +735,18 @@ function EditorCard({
 
 export function SiteDashboard({
   initialContent,
-  databaseConfigured,
   currentAdmin,
   initialAdmins,
 }: SiteDashboardProps) {
   const [draft, setDraft] = useState<SiteContent>(() => clone(initialContent));
   const [lastSaved, setLastSaved] = useState<SiteContent>(() => clone(initialContent));
-  const [activeSection, setActiveSection] = useState<(typeof sections)[number]["id"]>("metadata");
+  const [activeSection, setActiveSection] = useState<SectionId>("hero");
+  const [openGroups, setOpenGroups] = useState<Record<DashboardGroupId, boolean>>({
+    main: true,
+    pages: false,
+    settings: false,
+  });
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("جاهز للتحرير.");
   const [messageType, setMessageType] = useState<"idle" | "success" | "error">("idle");
   const [currentAdminEmail, setCurrentAdminEmail] = useState(currentAdmin.email);
@@ -310,6 +757,12 @@ export function SiteDashboard({
   const [adminMessage, setAdminMessage] = useState("يمكن تعديل البريد أو تعيين كلمة سر جديدة لأي مدير.");
   const [adminMessageType, setAdminMessageType] = useState<"idle" | "success" | "error">("idle");
   const [isAdminSaving, setIsAdminSaving] = useState(false);
+  const [socialPlatformToAdd, setSocialPlatformToAdd] = useState<string>(socialPlatforms[0].label);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryTarget, setGalleryTarget] = useState<GalleryTarget>(null);
+  const [isGalleryLoading, setIsGalleryLoading] = useState(false);
+  const [isGalleryUploading, setIsGalleryUploading] = useState(false);
 
   const isDirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(lastSaved), [draft, lastSaved]);
 
@@ -322,9 +775,159 @@ export function SiteDashboard({
     setDraft((current) => writePath(current, path, value));
   };
 
+  const toggleDashboardGroup = (groupId: DashboardGroupId) => {
+    setOpenGroups((current) => ({
+      ...current,
+      [groupId]: !current[groupId],
+    }));
+  };
+
+  const activateSection = (sectionId: SectionId, groupId: DashboardGroupId) => {
+    setActiveSection(sectionId);
+    setOpenGroups((current) => ({
+      ...current,
+      [groupId]: true,
+    }));
+  };
+
   const redirectToLogin = () => {
     window.location.href = "/admin-se?next=/dashboard";
   };
+
+  const loadGalleryImages = async () => {
+    setIsGalleryLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/gallery", { cache: "no-store" });
+      const payload = (await response.json()) as { images?: GalleryImage[]; message?: string };
+
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!response.ok || !payload.images) {
+        throw new Error(payload.message ?? "تعذر تحميل معرض الصور.");
+      }
+
+      setGalleryImages(dedupeGalleryImages(payload.images));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "تعذر تحميل معرض الصور.");
+      setMessageType("error");
+    } finally {
+      setIsGalleryLoading(false);
+    }
+  };
+
+  const openGalleryModal = (value: string, onSelect: (src: string) => void) => {
+    setGalleryTarget({ value, onSelect });
+    setIsGalleryOpen(true);
+    void loadGalleryImages();
+  };
+
+  const closeGalleryModal = () => {
+    setIsGalleryOpen(false);
+    setGalleryTarget(null);
+  };
+
+  const uploadGalleryFiles = async (files: FileList | File[]) => {
+    const selectedFiles = Array.from(files);
+
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    setIsGalleryUploading(true);
+
+    try {
+      const uploadedImages: GalleryImage[] = [];
+
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/admin/gallery", {
+          method: "POST",
+          body: formData,
+        });
+        const payload = (await response.json()) as { image?: GalleryImage; message?: string };
+
+        if (response.status === 401) {
+          redirectToLogin();
+          return;
+        }
+
+        if (!response.ok || !payload.image) {
+          throw new Error(payload.message ?? "تعذر رفع الصورة.");
+        }
+
+        uploadedImages.push(payload.image);
+      }
+
+      setGalleryImages((current) => dedupeGalleryImages([...uploadedImages, ...current]));
+      showSaveToast(uploadedImages.length > 1 ? "تم رفع الصور" : "تم رفع الصورة");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "تعذر رفع الصورة.";
+      setMessage(errorMessage);
+      setMessageType("error");
+      void Swal.fire({
+        icon: "error",
+        title: "تعذر رفع الصورة",
+        text: errorMessage,
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#25396E",
+      });
+    } finally {
+      setIsGalleryUploading(false);
+    }
+  };
+
+  const deleteGalleryImage = async (image: GalleryImage) => {
+    if (!image.deletable || !(await confirmDelete("تأكيد حذف الصورة"))) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/gallery", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ src: image.src }),
+      });
+      const payload = (await response.json()) as { message?: string };
+
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.message ?? "تعذر حذف الصورة.");
+      }
+
+      setGalleryImages((current) => current.filter((item) => item.src !== image.src));
+      showSaveToast(payload.message ?? "تم حذف الصورة");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "تعذر حذف الصورة.";
+      setMessage(errorMessage);
+      setMessageType("error");
+      void Swal.fire({
+        icon: "error",
+        title: "تعذر حذف الصورة",
+        text: errorMessage,
+        confirmButtonText: "حسناً",
+        confirmButtonColor: "#25396E",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === "gallery") {
+      void loadGalleryImages();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   const renderFields = (path: Path, fields: FieldDef[], columns = "md:grid-cols-2") => (
     <div className={`grid gap-4 ${columns}`}>
@@ -336,6 +939,7 @@ export function SiteDashboard({
           options={field.options}
           value={getValue([...path, field.key], "")}
           onChange={(value) => updateValue([...path, field.key], value)}
+          onOpenGallery={openGalleryModal}
         />
       ))}
     </div>
@@ -351,9 +955,12 @@ export function SiteDashboard({
             <DashboardField
               key={key}
               label={labels[key] ?? key}
-              type={key.toLowerCase().includes("email") || key === "phone" ? "text" : "url"}
+              type={
+                isImageAssetKey(key) ? "image" : key.toLowerCase().includes("email") || key === "phone" ? "text" : "url"
+              }
               value={value}
               onChange={(nextValue) => updateValue([...path, key], nextValue)}
+              onOpenGallery={openGalleryModal}
             />
           ))}
         </div>
@@ -385,11 +992,16 @@ export function SiteDashboard({
                 label={`${addLabel} ${index + 1}`}
                 value={item}
                 onChange={(value) => updateValue([...path, index], value)}
+                onOpenGallery={openGalleryModal}
               />
               <button
                 type="button"
                 className="mt-7 inline-flex h-11 w-11 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
-                onClick={() => updateValue(path, items.filter((_, itemIndex) => itemIndex !== index))}
+                onClick={async () => {
+                  if (await confirmDelete()) {
+                    updateValue(path, items.filter((_, itemIndex) => itemIndex !== index));
+                  }
+                }}
                 aria-label="حذف"
               >
                 <Trash2 size={18} aria-hidden="true" />
@@ -432,7 +1044,11 @@ export function SiteDashboard({
                 <button
                   type="button"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
-                  onClick={() => updateValue(path, items.filter((_, itemIndex) => itemIndex !== index))}
+                  onClick={async () => {
+                    if (await confirmDelete()) {
+                      updateValue(path, items.filter((_, itemIndex) => itemIndex !== index));
+                    }
+                  }}
                   aria-label="حذف"
                 >
                   <Trash2 size={17} aria-hidden="true" />
@@ -443,10 +1059,11 @@ export function SiteDashboard({
                   <DashboardField
                     key={field.key}
                     label={field.label}
-                    type={field.type}
+                    type={isImageObjectField(field) ? "image" : field.type}
                     options={field.options}
                     value={item[field.key]}
                     onChange={(value) => updateValue([...path, index, field.key], value)}
+                    onOpenGallery={openGalleryModal}
                   />
                 ))}
               </div>
@@ -457,34 +1074,66 @@ export function SiteDashboard({
     );
   };
 
-  const loadLatest = async () => {
-    setIsLoading(true);
-    setMessage("جاري تحميل آخر نسخة...");
-    setMessageType("idle");
+  const renderInlineObjectList = (
+    title: string,
+    path: Path,
+    fields: FieldDef[],
+    createItem: () => DraftRecord,
+    addLabel = "إضافة عنصر",
+  ) => {
+    const items = getValue<DraftRecord[]>(path, []);
 
-    try {
-      const response = await fetch("/api/admin/site-content", { cache: "no-store" });
-      const payload = (await response.json()) as { content: SiteContent; message?: string };
+    return (
+      <div className="rounded-lg border border-line bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h4 className="text-base font-black text-brand-800">{title}</h4>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-brand-800"
+            onClick={() => updateValue(path, [...items, createItem()])}
+          >
+            <Plus size={14} aria-hidden="true" />
+            {addLabel}
+          </button>
+        </div>
 
-      if (response.status === 401) {
-        redirectToLogin();
-        return;
-      }
+        <div className="grid gap-3">
+          {items.map((item, index) => (
+            <div className="rounded-lg border border-line bg-surface p-3" key={`${path.join(".")}-${index}`}>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="text-xs font-black text-muted">#{index + 1}</span>
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
+                  onClick={async () => {
+                    if (await confirmDelete()) {
+                      updateValue(path, items.filter((_, itemIndex) => itemIndex !== index));
+                    }
+                  }}
+                  aria-label="حذف"
+                >
+                  <Trash2 size={15} aria-hidden="true" />
+                </button>
+              </div>
 
-      if (!response.ok) {
-        throw new Error(payload.message ?? "تعذر تحميل المحتوى.");
-      }
-
-      setDraft(clone(payload.content));
-      setLastSaved(clone(payload.content));
-      setMessage("تم تحميل آخر نسخة.");
-      setMessageType("success");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "تعذر تحميل المحتوى.");
-      setMessageType("error");
-    } finally {
-      setIsLoading(false);
-    }
+              <div className="grid gap-3 md:grid-cols-2">
+                {fields.map((field) => (
+                  <DashboardField
+                    key={field.key}
+                    label={field.label}
+                    type={isImageObjectField(field) ? "image" : field.type}
+                    options={field.options}
+                    value={item[field.key]}
+                    onChange={(value) => updateValue([...path, index, field.key], value)}
+                    onOpenGallery={openGalleryModal}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const saveContent = async () => {
@@ -493,12 +1142,13 @@ export function SiteDashboard({
     setMessageType("idle");
 
     try {
+      const contentToSave = sanitizeSiteContent(draft);
       const response = await fetch("/api/admin/site-content", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content: draft }),
+        body: JSON.stringify({ content: contentToSave }),
       });
       const payload = (await response.json()) as { content?: SiteContent; message?: string };
 
@@ -515,24 +1165,13 @@ export function SiteDashboard({
       setLastSaved(clone(payload.content));
       setMessage(payload.message ?? "تم الحفظ.");
       setMessageType("success");
+      showSaveToast(payload.message ?? "تم حفظ المحتوى");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "تعذر حفظ المحتوى.");
       setMessageType("error");
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const resetDraft = () => {
-    setDraft(clone(lastSaved));
-    setMessage("تم إلغاء التعديلات غير المحفوظة.");
-    setMessageType("idle");
-  };
-
-  const restoreDefaults = () => {
-    setDraft(clone(defaultSiteContent));
-    setMessage("تم وضع المحتوى الافتراضي كمسودة.");
-    setMessageType("idle");
   };
 
   const refreshAdmins = async () => {
@@ -596,6 +1235,7 @@ export function SiteDashboard({
       setNewAdminPassword("");
       setAdminMessage(payload.message ?? "تمت إضافة المدير.");
       setAdminMessageType("success");
+      showSaveToast(payload.message ?? "تمت إضافة المدير");
     } catch (error) {
       setAdminMessage(error instanceof Error ? error.message : "تعذرت إضافة المدير.");
       setAdminMessageType("error");
@@ -646,6 +1286,7 @@ export function SiteDashboard({
 
       setAdminMessage(payload.message ?? "تم تحديث المدير.");
       setAdminMessageType("success");
+      showSaveToast(payload.message ?? "تم حفظ بيانات المدير");
     } catch (error) {
       setAdminMessage(error instanceof Error ? error.message : "تعذر تحديث المدير.");
       setAdminMessageType("error");
@@ -675,13 +1316,426 @@ export function SiteDashboard({
         ["partnersSection", "groups", key, "items"],
         [
           { key: "name", label: "اسم الجهة" },
-          { key: "logo", label: "مسار الشعار", type: "url" },
+          { key: "logo", label: "الشعار", type: "image" },
         ],
         () => ({ name: "", logo: "" }),
         "إضافة شعار",
       )}
     </div>
   );
+
+  const renderSocialLinksEditor = () => {
+    const socialLinks = normalizeSocialLinks(getValue<SocialLink[]>(["socialLinks"], []));
+    const usedPlatforms = new Set(socialLinks.map((link) => link.label));
+    const availablePlatforms = socialPlatforms.filter((platform) => !usedPlatforms.has(platform.label));
+    const selectedPlatform =
+      availablePlatforms.find((platform) => platform.label === socialPlatformToAdd) ?? availablePlatforms[0];
+
+    const updateSocialLinks = (links: SocialLink[]) => {
+      updateValue(["socialLinks"], normalizeSocialLinks(links));
+    };
+
+    const addSocialPlatform = () => {
+      if (!selectedPlatform) {
+        return;
+      }
+
+      updateSocialLinks([
+        ...socialLinks,
+        {
+          label: selectedPlatform.label,
+          short: selectedPlatform.short,
+          href: "",
+        },
+      ]);
+
+      const nextAvailable = availablePlatforms.find((platform) => platform.label !== selectedPlatform.label);
+      setSocialPlatformToAdd(nextAvailable?.label ?? socialPlatforms[0].label);
+    };
+
+    const updateSocialValue = (platform: SocialPlatform, value: string) => {
+      updateSocialLinks(
+        socialLinks.map((link) =>
+          link.label === platform.label
+            ? {
+                label: platform.label,
+                short: platform.short,
+                href: buildSocialHref(platform, value),
+              }
+            : link,
+        ),
+      );
+    };
+
+    const deleteSocialPlatform = async (platform: SocialPlatform) => {
+      if (await confirmDelete(`تأكيد حذف ${platform.label}`)) {
+        updateSocialLinks(socialLinks.filter((link) => link.label !== platform.label));
+        setSocialPlatformToAdd(platform.label);
+      }
+    };
+
+    return (
+      <EditorCard
+        title="روابط التواصل الاجتماعي"
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedPlatform?.label ?? ""}
+              disabled={availablePlatforms.length === 0}
+              onChange={(event) => setSocialPlatformToAdd(event.target.value)}
+              className="min-h-10 rounded-md border border-line bg-white px-3 py-2 text-sm font-extrabold text-ink shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="اختيار وسيلة تواصل"
+            >
+              {availablePlatforms.length > 0 ? (
+                availablePlatforms.map((platform) => (
+                  <option value={platform.label} key={platform.label}>
+                    {platform.label}
+                  </option>
+                ))
+              ) : (
+                <option value="">كل الوسائل مضافة</option>
+              )}
+            </select>
+            <button
+              type="button"
+              disabled={!selectedPlatform}
+              className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={addSocialPlatform}
+            >
+              <Plus size={16} aria-hidden="true" />
+              إضافة
+            </button>
+          </div>
+        }
+      >
+        <div className="grid gap-4">
+          {socialLinks.map((link) => {
+            const platform = findSocialPlatform(link.label);
+
+            if (!platform) {
+              return null;
+            }
+
+            return (
+              <article className="rounded-lg border border-line bg-surface p-4" key={platform.label}>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-sm font-black text-white">
+                      {platform.short}
+                    </span>
+                    <div>
+                      <h3 className="text-lg text-brand-800">{platform.label}</h3>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
+                    onClick={() => deleteSocialPlatform(platform)}
+                    aria-label={`حذف ${platform.label}`}
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                  <label className="block text-sm font-extrabold text-ink">
+                    {platform.valueLabel}
+                    <input
+                      type="text"
+                      value={socialValueFromHref(platform, link.href)}
+                      placeholder={platform.placeholder}
+                      onChange={(event) => updateSocialValue(platform, event.target.value)}
+                      className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2.5 text-sm text-ink shadow-sm transition focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/10"
+                    />
+                  </label>
+
+                  <a
+                    href={link.href || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "inline-flex min-h-11 items-center justify-center rounded-md border px-4 py-2 text-sm font-extrabold transition",
+                      link.href
+                        ? "border-line bg-white text-ink hover:bg-mist"
+                        : "pointer-events-none border-line bg-white text-muted opacity-50",
+                    )}
+                  >
+                    معاينة الرابط
+                  </a>
+                </div>
+              </article>
+            );
+          })}
+
+          {socialLinks.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-line bg-surface p-5 text-center text-sm font-bold text-muted">
+              لا توجد وسائل تواصل مضافة. اختر منصة من الأعلى ثم اضغط إضافة.
+            </div>
+          ) : null}
+        </div>
+      </EditorCard>
+    );
+  };
+
+  const renderGalleryUploadButton = (label = "رفع صور") => (
+    <label
+      className={cn(
+        "inline-flex min-h-10 items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-brand-800",
+        isGalleryUploading && "pointer-events-none opacity-60",
+      )}
+    >
+      {isGalleryUploading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Upload size={16} aria-hidden="true" />}
+      {label}
+      <input
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        multiple
+        className="hidden"
+        disabled={isGalleryUploading}
+        onChange={(event) => {
+          const files = Array.from(event.currentTarget.files ?? []);
+          event.currentTarget.value = "";
+          void uploadGalleryFiles(files);
+        }}
+      />
+    </label>
+  );
+
+  const renderGalleryGrid = (selectable = false) => (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {galleryImages.map((image) => {
+        const isSelected = galleryTarget?.value === image.src;
+        const fileSize = formatFileSize(image.size);
+
+        return (
+          <article
+            className={cn(
+              "overflow-hidden rounded-lg border bg-white shadow-sm transition",
+              isSelected ? "border-brand-600 ring-2 ring-brand-600/15" : "border-line",
+            )}
+            key={image.src}
+          >
+            <button
+              type="button"
+              disabled={!selectable}
+              onClick={() => {
+                if (!selectable || !galleryTarget) {
+                  return;
+                }
+
+                galleryTarget.onSelect(image.src);
+                closeGalleryModal();
+              }}
+              className={cn(
+                "flex h-40 w-full items-center justify-center bg-mist",
+                selectable && "transition hover:bg-brand-50",
+              )}
+            >
+              <img src={image.src} alt="" className="h-full w-full object-contain" />
+            </button>
+
+            <div className="grid gap-3 p-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-ink">{image.name}</p>
+                <p className="mt-1 truncate text-xs font-bold text-muted">
+                  {image.origin === "uploads" ? "مرفوعة" : "أصلية"}
+                  {fileSize ? ` · ${fileSize}` : ""}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <p className="min-w-0 flex-1 truncate text-xs font-bold text-muted">{image.src}</p>
+                {image.deletable ? (
+                  <button
+                    type="button"
+                    onClick={() => void deleteGalleryImage(image)}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
+                    aria-label={`حذف ${image.name}`}
+                  >
+                    <Trash2 size={15} aria-hidden="true" />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+
+  const renderGalleryManager = () => (
+    <EditorCard
+      title="معرض الصور"
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void loadGalleryImages()}
+            disabled={isGalleryLoading}
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-line bg-white px-4 py-2 text-sm font-extrabold text-ink transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGalleryLoading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={16} aria-hidden="true" />}
+            تحديث
+          </button>
+          {renderGalleryUploadButton()}
+        </div>
+      }
+    >
+      {isGalleryLoading ? (
+        <div className="flex min-h-48 items-center justify-center rounded-lg border border-line bg-surface text-sm font-bold text-muted">
+          <Loader2 size={22} className="animate-spin" aria-hidden="true" />
+        </div>
+      ) : galleryImages.length > 0 ? (
+        renderGalleryGrid()
+      ) : (
+        <div className="rounded-lg border border-dashed border-line bg-surface p-8 text-center text-sm font-bold text-muted">
+          لا توجد صور في المعرض.
+        </div>
+      )}
+    </EditorCard>
+  );
+
+  const renderSponsorsPageEditor = () => {
+    const tiers = getValue<DraftRecord[]>(["secondaryPages", "sponsors", "tiers"], []);
+
+    return (
+      <div className="grid gap-5">
+        <EditorCard title="صفحة الرعاة">
+          {renderFields(
+            ["secondaryPages", "sponsors"],
+            [
+              { key: "title", label: "عنوان الصفحة" },
+              { key: "description", label: "الوصف", type: "textarea" },
+            ],
+            "md:grid-cols-1",
+          )}
+        </EditorCard>
+
+        {renderObjectList(
+          "مميزات الرعاة",
+          ["secondaryPages", "sponsors", "benefits"],
+          [
+            { key: "label", label: "النص" },
+            { key: "icon", label: "الأيقونة", type: "icon", options: sponsorIconOptions },
+          ],
+          () => ({ label: "", icon: "globe" }),
+          "إضافة ميزة",
+        )}
+
+        <EditorCard
+          title="فئات الرعاية"
+          action={
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-brand-800"
+              onClick={() =>
+                updateValue(
+                  ["secondaryPages", "sponsors", "tiers"],
+                  [
+                    ...tiers,
+                    {
+                      key: `tier-${tiers.length + 1}`,
+                      tabLabel: "",
+                      icon: "star",
+                      title: "",
+                      description: "",
+                      stats: [],
+                      miniBenefits: [],
+                    },
+                  ],
+                )
+              }
+            >
+              <Plus size={16} aria-hidden="true" />
+              إضافة فئة
+            </button>
+          }
+        >
+          <div className="grid gap-5">
+            {tiers.map((_, index) => (
+              <article className="rounded-lg border border-line bg-surface p-4" key={`sponsor-tier-${index}`}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="text-base text-brand-800">فئة #{index + 1}</h3>
+                  <button
+                    type="button"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 transition hover:bg-red-50"
+                    onClick={async () => {
+                      if (await confirmDelete("تأكيد حذف فئة الرعاية")) {
+                        updateValue(
+                          ["secondaryPages", "sponsors", "tiers"],
+                          tiers.filter((__, tierIndex) => tierIndex !== index),
+                        );
+                      }
+                    }}
+                    aria-label="حذف"
+                  >
+                    <Trash2 size={17} aria-hidden="true" />
+                  </button>
+                </div>
+
+                {renderFields(
+                  ["secondaryPages", "sponsors", "tiers", index],
+                  [
+                    { key: "key", label: "المعرّف بالإنجليزية" },
+                    { key: "tabLabel", label: "اسم التبويب" },
+                    { key: "icon", label: "الأيقونة", type: "icon", options: sponsorIconOptions },
+                    { key: "title", label: "العنوان" },
+                    { key: "description", label: "الوصف", type: "textarea" },
+                  ],
+                  "md:grid-cols-2",
+                )}
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  {renderInlineObjectList(
+                    "الأرقام",
+                    ["secondaryPages", "sponsors", "tiers", index, "stats"],
+                    [
+                      { key: "value", label: "القيمة" },
+                      { key: "label", label: "الوصف" },
+                    ],
+                    () => ({ value: "", label: "" }),
+                    "إضافة رقم",
+                  )}
+
+                  {renderInlineObjectList(
+                    "المزايا المصغرة",
+                    ["secondaryPages", "sponsors", "tiers", index, "miniBenefits"],
+                    [
+                      { key: "label", label: "النص" },
+                      { key: "icon", label: "الأيقونة", type: "icon", options: sponsorIconOptions },
+                    ],
+                    () => ({ label: "", icon: "globe" }),
+                    "إضافة ميزة",
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </EditorCard>
+
+        <EditorCard title="نداء صفحة الرعاة">
+          {renderFields(
+            ["secondaryPages", "sponsors"],
+            [{ key: "ctaTitle", label: "النص", type: "textarea" }],
+            "md:grid-cols-1",
+          )}
+        </EditorCard>
+
+        {renderObjectList(
+          "أزرار صفحة الرعاة",
+          ["secondaryPages", "sponsors", "ctaButtons"],
+          [
+            { key: "label", label: "نص الزر" },
+            { key: "href", label: "الرابط", type: "url" },
+            { key: "icon", label: "الأيقونة", type: "icon", options: sponsorIconOptions },
+          ],
+          () => ({ label: "", href: "", icon: "arrow" }),
+          "إضافة زر",
+        )}
+      </div>
+    );
+  };
 
   const activeContent = () => {
     switch (activeSection) {
@@ -708,6 +1762,9 @@ export function SiteDashboard({
             {renderRecordFields("الأصول والصور", ["assets"], assetLabels)}
           </div>
         );
+
+      case "gallery":
+        return renderGalleryManager();
 
       case "header":
         return (
@@ -851,6 +1908,145 @@ export function SiteDashboard({
               ],
               () => ({ title: "", description: "", href: "", action: "" }),
               "إضافة بطاقة",
+            )}
+          </div>
+        );
+
+      case "visitors-page":
+        return (
+          <div className="grid gap-5">
+            <EditorCard title="صفحة الزوار">
+              {renderFields(
+                ["secondaryPages", "visitors"],
+                [
+                  { key: "title", label: "العنوان" },
+                  { key: "lead", label: "الوصف", type: "textarea" },
+                  { key: "note", label: "الملاحظة" },
+                  { key: "iframeSrc", label: "رابط النموذج", type: "url" },
+                  { key: "iframeTitle", label: "عنوان iframe" },
+                ],
+                "md:grid-cols-1",
+              )}
+            </EditorCard>
+            {renderObjectList(
+              "خطوات التسجيل",
+              ["secondaryPages", "visitors", "steps"],
+              [
+                { key: "title", label: "عنوان الخطوة" },
+                { key: "description", label: "وصف الخطوة", type: "textarea" },
+              ],
+              () => ({ title: "", description: "" }),
+              "إضافة خطوة",
+            )}
+          </div>
+        );
+
+      case "exhibitors-page":
+        return (
+          <EditorCard title="صفحة العارضين">
+            {renderFields(
+              ["secondaryPages", "exhibitors"],
+              [
+                { key: "topPanelTitle", label: "النص العلوي", type: "textarea" },
+                { key: "iframeSrc", label: "رابط النموذج", type: "url" },
+                { key: "iframeTitle", label: "عنوان iframe" },
+              ],
+              "md:grid-cols-1",
+            )}
+          </EditorCard>
+        );
+
+      case "sponsors-page":
+        return renderSponsorsPageEditor();
+
+      case "media-page":
+        return (
+          <div className="grid gap-5">
+            <EditorCard title="المركز الإعلامي">
+              {renderFields(
+                ["secondaryPages", "media"],
+                [
+                  { key: "title", label: "العنوان" },
+                  { key: "description", label: "الوصف", type: "textarea" },
+                  { key: "readMoreLabel", label: "نص رابط قراءة الخبر" },
+                ],
+                "md:grid-cols-1",
+              )}
+            </EditorCard>
+            {renderObjectList(
+              "إحصائيات المركز الإعلامي",
+              ["secondaryPages", "media", "stats"],
+              [
+                { key: "value", label: "القيمة" },
+                { key: "label", label: "الوصف" },
+              ],
+              () => ({ value: "", label: "" }),
+              "إضافة إحصائية",
+            )}
+            {renderObjectList(
+              "المقالات الصحفية",
+              ["secondaryPages", "media", "articles"],
+              [
+                { key: "title", label: "العنوان" },
+                { key: "source", label: "المصدر" },
+                { key: "href", label: "رابط الخبر", type: "url" },
+                { key: "image", label: "الصورة", type: "image" },
+                { key: "alt", label: "النص البديل للصورة" },
+                { key: "description", label: "الوصف", type: "textarea" },
+              ],
+              () => ({ title: "", source: "", href: "", image: "", alt: "", description: "" }),
+              "إضافة مقال",
+            )}
+          </div>
+        );
+
+      case "privacy-page":
+        return (
+          <div className="grid gap-5">
+            <EditorCard title="سياسة الخصوصية">
+              {renderFields(
+                ["secondaryPages", "privacy"],
+                [
+                  { key: "eyebrow", label: "الوسم" },
+                  { key: "title", label: "العنوان" },
+                  { key: "description", label: "الوصف", type: "textarea" },
+                  { key: "updatedLabel", label: "تسمية تاريخ التحديث" },
+                  { key: "updatedAt", label: "تاريخ التحديث" },
+                  { key: "intro", label: "المقدمة", type: "textarea" },
+                ],
+                "md:grid-cols-1",
+              )}
+            </EditorCard>
+            {renderObjectList(
+              "بنود السياسة",
+              ["secondaryPages", "privacy", "sections"],
+              [
+                { key: "title", label: "عنوان البند" },
+                { key: "body", label: "النص", type: "textarea" },
+              ],
+              () => ({ title: "", body: "" }),
+              "إضافة بند",
+            )}
+            <EditorCard title="قسم التواصل للخصوصية">
+              {renderFields(
+                ["secondaryPages", "privacy"],
+                [
+                  { key: "contactTitle", label: "عنوان التواصل" },
+                  { key: "contactDescription", label: "وصف التواصل", type: "textarea" },
+                ],
+                "md:grid-cols-1",
+              )}
+            </EditorCard>
+            {renderObjectList(
+              "وسائل التواصل",
+              ["secondaryPages", "privacy", "contactItems"],
+              [
+                { key: "label", label: "العنوان" },
+                { key: "value", label: "القيمة" },
+                { key: "href", label: "الرابط", type: "url" },
+              ],
+              () => ({ label: "", value: "", href: "" }),
+              "إضافة وسيلة",
             )}
           </div>
         );
@@ -1078,17 +2274,7 @@ export function SiteDashboard({
         );
 
       case "social":
-        return renderObjectList(
-          "روابط التواصل الاجتماعي",
-          ["socialLinks"],
-          [
-            { key: "label", label: "المنصة" },
-            { key: "href", label: "الرابط", type: "url" },
-            { key: "short", label: "الاختصار" },
-          ],
-          () => ({ label: "", href: "", short: "" }),
-          "إضافة منصة",
-        );
+        return renderSocialLinksEditor();
 
       case "admins":
         return (
@@ -1227,11 +2413,7 @@ export function SiteDashboard({
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex w-[min(1460px,calc(100%-28px))] flex-col gap-5 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-brand-600/15 bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">
-              <Database size={14} aria-hidden="true" />
-              {databaseConfigured ? "Postgres متصل" : "DATABASE_URL غير مضبوط"}
-            </p>
-            <h1 className="mt-3 text-2xl text-brand-900 sm:text-3xl">لوحة تحرير محتوى سيريدو</h1>
+            <h1 className="text-2xl text-brand-900 sm:text-3xl">لوحة تحرير محتوى سيريدو</h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -1248,33 +2430,6 @@ export function SiteDashboard({
               <Eye size={17} aria-hidden="true" />
               معاينة
             </a>
-            <button
-              type="button"
-              onClick={loadLatest}
-              disabled={isLoading || isSaving}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-white px-4 py-2 text-sm font-extrabold text-ink transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoading ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={17} aria-hidden="true" />}
-              تحديث
-            </button>
-            <button
-              type="button"
-              onClick={resetDraft}
-              disabled={!isDirty || isSaving}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-white px-4 py-2 text-sm font-extrabold text-ink transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw size={17} aria-hidden="true" />
-              إلغاء
-            </button>
-            <button
-              type="button"
-              onClick={restoreDefaults}
-              disabled={isSaving}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-white px-4 py-2 text-sm font-extrabold text-ink transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw size={17} aria-hidden="true" />
-              الافتراضي
-            </button>
             <button
               type="button"
               onClick={saveContent}
@@ -1299,25 +2454,58 @@ export function SiteDashboard({
       <div className="mx-auto flex w-[min(1460px,calc(100%-28px))] flex-col gap-5 py-6 lg:flex-row-reverse lg:items-start">
         <aside className="w-full shrink-0 lg:sticky lg:top-5 lg:w-72">
           <nav className="rounded-lg border border-line bg-white p-2 shadow-soft" aria-label="أقسام الداشبورد">
-            <div className="grid gap-1">
-              {sections.map((section) => {
-                const Icon = section.icon;
-                const isActive = activeSection === section.id;
+            <div className="grid gap-2">
+              {dashboardGroups.map((group) => {
+                const GroupIcon = group.icon;
+                const isOpen = openGroups[group.id];
+                const groupHasActiveSection = group.sectionIds.includes(activeSection);
 
                 return (
-                  <button
-                    type="button"
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id)}
-                    className={cn(
-                      "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-right text-sm font-extrabold transition",
-                      isActive ? "bg-brand-600 text-white shadow-sm" : "text-ink hover:bg-mist",
-                    )}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <Icon size={18} aria-hidden="true" />
-                    <span>{section.label}</span>
-                  </button>
+                  <section className="rounded-md border border-line/70 bg-surface/60 p-1" key={group.id}>
+                    <button
+                      type="button"
+                      onClick={() => toggleDashboardGroup(group.id)}
+                      className={cn(
+                        "flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-right text-sm font-black transition",
+                        groupHasActiveSection ? "bg-brand-50 text-brand-800" : "text-ink hover:bg-white",
+                      )}
+                      aria-expanded={isOpen}
+                    >
+                      <GroupIcon size={18} aria-hidden="true" />
+                      <span className="min-w-0 flex-1">{group.label}</span>
+                      <ChevronDown
+                        size={17}
+                        className={cn("transition-transform duration-200", isOpen && "rotate-180")}
+                        aria-hidden="true"
+                      />
+                    </button>
+
+                    {isOpen ? (
+                      <div className="mt-1 grid gap-1 border-t border-line/70 pt-1">
+                        {group.sectionIds.map((sectionId) => {
+                          const section = sectionsById[sectionId];
+                          const Icon = section.icon;
+                          const isActive = activeSection === section.id;
+
+                          return (
+                            <button
+                              type="button"
+                              key={section.id}
+                              onClick={() => activateSection(section.id, group.id)}
+                              className={cn(
+                                "flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-right text-sm font-extrabold transition",
+                                isActive ? "bg-brand-600 text-white shadow-sm" : "text-ink/80 hover:bg-white hover:text-brand-800",
+                              )}
+                              aria-current={isActive ? "page" : undefined}
+                            >
+                              <Icon size={17} aria-hidden="true" />
+                              <span>{section.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </section>
                 );
               })}
             </div>
@@ -1347,6 +2535,59 @@ export function SiteDashboard({
           {activeContent()}
         </main>
       </div>
+
+      {isGalleryOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-4">
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full cursor-default"
+            onClick={closeGalleryModal}
+            aria-label="إغلاق معرض الصور"
+          />
+          <section className="relative z-10 flex max-h-[88vh] w-[min(1060px,100%)] flex-col overflow-hidden rounded-lg border border-line bg-white shadow-strong">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-4">
+              <div>
+                <h2 className="text-xl text-brand-800">معرض الصور</h2>
+                <p className="mt-1 text-xs font-bold text-muted">{galleryImages.length} صورة</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {renderGalleryUploadButton("رفع صورة")}
+                <button
+                  type="button"
+                  onClick={() => void loadGalleryImages()}
+                  disabled={isGalleryLoading}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-ink transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-label="تحديث المعرض"
+                >
+                  {isGalleryLoading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={16} aria-hidden="true" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeGalleryModal}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-ink transition hover:bg-mist"
+                  aria-label="إغلاق"
+                >
+                  <X size={17} aria-hidden="true" />
+                </button>
+              </div>
+            </header>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              {isGalleryLoading ? (
+                <div className="flex min-h-72 items-center justify-center rounded-lg border border-line bg-surface text-sm font-bold text-muted">
+                  <Loader2 size={24} className="animate-spin" aria-hidden="true" />
+                </div>
+              ) : galleryImages.length > 0 ? (
+                renderGalleryGrid(true)
+              ) : (
+                <div className="rounded-lg border border-dashed border-line bg-surface p-8 text-center text-sm font-bold text-muted">
+                  لا توجد صور في المعرض.
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

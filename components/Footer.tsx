@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { ArrowUp, CalendarDays, Clock3, Mail, MapPin, Phone, Tag } from "lucide-react";
+import { ArrowUp, CalendarDays, Clock3, Link as LinkIcon, Mail, MapPin, Phone, Tag } from "lucide-react";
+import type { SVGProps } from "react";
 import { defaultSiteContent, type SiteContent } from "@/data/site";
 
 const contactIcons = [Phone, Mail, MapPin, MapPin];
@@ -15,6 +16,75 @@ function linkTarget(href?: string) {
 
 function linkRel(href?: string) {
   return href?.startsWith("http") ? "noopener noreferrer" : undefined;
+}
+
+function XIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M13.9 10.47 21.35 2h-1.77l-6.47 7.35L7.95 2H2l7.81 11.12L2 22h1.77l6.82-7.75L16.05 22H22l-8.1-11.53Zm-2.42 2.75-.79-1.1-6.3-8.82h2.71l5.08 7.1.79 1.1 6.61 9.25h-2.71l-5.39-7.53Z" />
+    </svg>
+  );
+}
+
+function InstagramIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function LinkedInIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M6.94 8.88H3.5V20h3.44V8.88ZM5.22 4a2 2 0 1 0 0 4.01 2 2 0 0 0 0-4.01Zm15.28 9.64c0-3.25-1.74-4.77-4.06-4.77a3.49 3.49 0 0 0-3.15 1.73h-.05V8.88H9.95V20h3.43v-5.5c0-1.45.28-2.86 2.08-2.86 1.77 0 1.79 1.66 1.79 2.95V20h3.43l-.18-6.36Z" />
+    </svg>
+  );
+}
+
+function YouTubeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.96-1.97C18.85 4 12 4 12 4s-6.85 0-8.58.45a2.78 2.78 0 0 0-1.96 1.97A29.1 29.1 0 0 0 1 12a29.1 29.1 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.96 1.97C5.15 20 12 20 12 20s6.85 0 8.58-.45a2.78 2.78 0 0 0 1.96-1.97A29.1 29.1 0 0 0 23 12a29.1 29.1 0 0 0-.46-5.58ZM9.8 15.43V8.57L15.5 12l-5.7 3.43Z" />
+    </svg>
+  );
+}
+
+function TikTokIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M16.6 2c.34 2.6 1.8 4.15 4.4 4.32v3.11a7.52 7.52 0 0 1-4.32-1.34v6.53c0 3.3-2.02 6.38-6.34 6.38-3.46 0-6.34-2.67-6.34-6.06 0-3.78 3.1-6.53 7.03-6.05v3.25c-1.72-.27-3.56.68-3.56 2.72 0 1.56 1.24 2.8 2.83 2.8 1.85 0 2.95-1.08 2.95-3.45V2h3.35Z" />
+    </svg>
+  );
+}
+
+function SocialIcon({ label, short }: { label: string; short?: string }) {
+  const key = `${label} ${short ?? ""}`.toLowerCase();
+  const iconClass = "h-5 w-5";
+
+  if (key.includes("youtube") || key.includes("yt")) {
+    return <YouTubeIcon className={iconClass} />;
+  }
+
+  if (key.includes("instagram") || key.includes("ig")) {
+    return <InstagramIcon className={iconClass} />;
+  }
+
+  if (key.includes("linkedin") || key.includes("in")) {
+    return <LinkedInIcon className={iconClass} />;
+  }
+
+  if (key.includes("tiktok") || key.includes("tt")) {
+    return <TikTokIcon className={iconClass} />;
+  }
+
+  if (key.includes("twitter") || key.includes("x")) {
+    return <XIcon className={iconClass} />;
+  }
+
+  return <LinkIcon size={20} aria-hidden="true" />;
 }
 
 export function Footer({ site = defaultSiteContent }: FooterProps) {
@@ -42,9 +112,10 @@ export function Footer({ site = defaultSiteContent }: FooterProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-black text-white transition hover:bg-teal-300 hover:text-brand-900"
+                    title={social.label}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-teal-300 hover:text-brand-900"
                   >
-                    {social.short}
+                    <SocialIcon label={social.label} short={social.short} />
                   </a>
                 ))}
               </div>
