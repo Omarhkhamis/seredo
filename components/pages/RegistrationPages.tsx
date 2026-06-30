@@ -1,4 +1,5 @@
 import type { SiteContent } from "@/data/site";
+import { RegistrationForm } from "@/components/pages/RegistrationForm";
 
 type RegistrationPagesProps = {
   site: SiteContent;
@@ -30,7 +31,7 @@ export function VisitorsRegistrationPage({ site }: RegistrationPagesProps) {
         </div>
 
         <div className="form-side">
-          <iframe src={page.iframeSrc} title={page.iframeTitle} loading="eager" scrolling="no" />
+          <RegistrationForm type="visitor" />
         </div>
       </div>
     </section>
@@ -47,7 +48,7 @@ export function ExhibitorsRegistrationPage({ site }: RegistrationPagesProps) {
       </div>
 
       <div className="form-wrap">
-        <iframe src={page.iframeSrc} title={page.iframeTitle} loading="eager" scrolling="auto" />
+        <RegistrationForm type="exhibitor" />
       </div>
     </section>
   );
