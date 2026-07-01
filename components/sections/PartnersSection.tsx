@@ -1,119 +1,6 @@
 import Image from "next/image";
 import { defaultSiteContent, type SiteContent, type SiteContentPartner } from "@/data/site";
 
-const governmentLogoUrls = [
-  "/assets/seredo/partners/partner-001-ministry-of-housing-6-scaled-e1781591519236.jpg",
-  "/assets/seredo/partners/partner-002-nhc-logo-ntlgreen-h-rgb.png",
-  "/assets/seredo/partners/partner-003-untitled-22-2026-12-10-44.png",
-  "/assets/seredo/partners/partner-004-page-0001-scaled-e1781591478427.jpg",
-  "/assets/seredo/partners/partner-005-jeddah-municipality-logo-page-0001-scaled-e1781591459845.jpg",
-  "/assets/seredo/partners/partner-006-rega-logo-page-0001-scaled.jpg",
-  "/assets/seredo/partners/partner-007-60409-e1781591431483.jpg",
-  "/assets/seredo/partners/partner-008-makkah-chamber-of-commerce-logo.png",
-] as const;
-
-const financeLogoUrls = [
-  "/assets/seredo/partners/partner-009-alinma-bank-logo-cmyk-2-scaled.png",
-  "/assets/seredo/partners/partner-010-anb-logo-4m-bank-e1781594579153.png",
-  "/assets/seredo/partners/partner-011-snb-brandmark-artwork-cmyk-primary.png",
-  "/assets/seredo/partners/partner-012-logo.png",
-  "/assets/seredo/partners/partner-013-bank-albilad-logo.png",
-] as const;
-
-const exhibitorLogoUrls = [
-  "/assets/seredo/exp/exp1.webp",
-  "/assets/seredo/exp/exp2.webp",
-  "/assets/seredo/exp/exp3.webp",
-  "/assets/seredo/exp/exp4.webp",
-  "/assets/seredo/exp/exp5.webp",
-  "/assets/seredo/exp/exp6.webp",
-  "/assets/seredo/exp/exp7.webp",
-  "/assets/seredo/exp/exp8.webp",
-  "/assets/seredo/exp/exp9.webp",
-  "/assets/seredo/exp/exp10.webp",
-  "/assets/seredo/exp/exp11.webp",
-  "/assets/seredo/exp/exp12.webp",
-  "/assets/seredo/exp/exp13.webp",
-  "/assets/seredo/exp/exp14.webp",
-  "/assets/seredo/exp/exp15.webp",
-  "/assets/seredo/exp/exp16.webp",
-  "/assets/seredo/exp/exp17.webp",
-  "/assets/seredo/exp/exp18.webp",
-  "/assets/seredo/exp/exp19.webp",
-  "/assets/seredo/exp/exp20.webp",
-  "/assets/seredo/exp/exp21.webp",
-  "/assets/seredo/exp/exp22.webp",
-  "/assets/seredo/exp/exp23.webp",
-  "/assets/seredo/exp/exp24.webp",
-  "/assets/seredo/exp/exp25.webp",
-  "/assets/seredo/exp/exp26.webp",
-  "/assets/seredo/exp/exp27.webp",
-  "/assets/seredo/exp/exp28.webp",
-  "/assets/seredo/exp/exp29.webp",
-  "/assets/seredo/exp/exp30.webp",
-  "/assets/seredo/exp/exp31.webp",
-  "/assets/seredo/exp/exp32.webp",
-  "/assets/seredo/exp/exp33.webp",
-  "/assets/seredo/exp/exp34.webp",
-  "/assets/seredo/exp/exp35.webp",
-  "/assets/seredo/exp/exp36.webp",
-  "/assets/seredo/exp/exp37.webp",
-  "/assets/seredo/exp/exp38.webp",
-  "/assets/seredo/exp/exp39.webp",
-  "/assets/seredo/exp/exp40.webp",
-  "/assets/seredo/exp/exp41.webp",
-  "/assets/seredo/exp/exp42.webp",
-  "/assets/seredo/exp/exp43.webp",
-  "/assets/seredo/exp/exp44.webp",
-  "/assets/seredo/exp/exp45.webp",
-  "/assets/seredo/exp/exp46.webp",
-  "/assets/seredo/exp/exp47.webp",
-  "/assets/seredo/exp/exp48.webp",
-  "/assets/seredo/exp/exp49.webp",
-  "/assets/seredo/exp/exp50.webp",
-  "/assets/seredo/exp/exp51.webp",
-  "/assets/seredo/exp/exp52.webp",
-  "/assets/seredo/exp/exp53.webp",
-  "/assets/seredo/exp/exp54.webp",
-  "/assets/seredo/exp/exp55.webp",
-  "/assets/seredo/exp/exp56.webp",
-  "/assets/seredo/exp/exp57.webp",
-  "/assets/seredo/exp/exp58.webp",
-  "/assets/seredo/exp/exp59.webp",
-  "/assets/seredo/exp/exp60.webp",
-  "/assets/seredo/exp/exp61.webp",
-  "/assets/seredo/exp/exp62.webp",
-  "/assets/seredo/exp/exp63.webp",
-  "/assets/seredo/exp/exp64.webp",
-  "/assets/seredo/exp/exp65.webp",
-  "/assets/seredo/exp/exp66.webp",
-  "/assets/seredo/exp/exp67.webp",
-  "/assets/seredo/exp/exp68.webp",
-  "/assets/seredo/exp/exp69.webp",
-  "/assets/seredo/exp/exp70.webp",
-  "/assets/seredo/exp/exp71.webp",
-  "/assets/seredo/exp/exp72.webp",
-  "/assets/seredo/exp/exp73.webp",
-  "/assets/seredo/exp/exp74.webp",
-  "/assets/seredo/exp/exp75.webp",
-  "/assets/seredo/exp/exp76.webp",
-  "/assets/seredo/exp/exp77.webp",
-  "/assets/seredo/exp/exp78.webp",
-  "/assets/seredo/exp/exp79.webp",
-  "/assets/seredo/exp/exp80.webp",
-  "/assets/seredo/exp/exp81.webp",
-  "/assets/seredo/exp/exp82.webp",
-  "/assets/seredo/exp/exp83.webp",
-  "/assets/seredo/exp/exp84.webp",
-] as const;
-
-function makeLogoItems(prefix: string, urls: readonly string[]) {
-  return urls.map((logo, index) => ({
-    name: `${prefix} ${String(index + 1).padStart(2, "0")}`,
-    logo,
-  }));
-}
-
 function LogoCell({
   partner,
   hidden = false,
@@ -155,9 +42,9 @@ type PartnersSectionProps = {
 export function PartnersSection({ site = defaultSiteContent }: PartnersSectionProps) {
   const section = site.partnersSection;
   const { government, finance, exhibitors, media } = section.groups;
-  const governmentItems = makeLogoItems("جهة حكومية", governmentLogoUrls);
-  const financeItems = makeLogoItems("جهة تمويلية", financeLogoUrls);
-  const exhibitorItems = makeLogoItems("عارض", exhibitorLogoUrls);
+  const governmentItems = government.items;
+  const financeItems = finance.items;
+  const exhibitorItems = exhibitors.items;
   const governmentGroups = [governmentItems, governmentItems];
   const exhibitorGroups = [exhibitorItems, exhibitorItems];
 

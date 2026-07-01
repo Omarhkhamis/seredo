@@ -15,6 +15,25 @@ declare global {
 const CONTENT_ID = "main";
 
 type PlainRecord = Record<string, unknown>;
+type ContentPath = Array<string | number>;
+
+const editableContentPaths: ContentPath[] = [
+  ["metadata", "title"],
+  ["metadata", "description"],
+  ["links", "visitorRegistration"],
+  ["links", "exhibitorRegistration"],
+  ["links", "whatsapp"],
+  ["links", "email"],
+  ["links", "phone"],
+  ["links", "map"],
+  ["assets", "heroVideo"],
+  ["assets", "heroPoster"],
+  ["hero", "imageAlt"],
+  ["hero", "figureTitle"],
+  ["hero", "figureDescription"],
+  ["partnersSection"],
+  ["footer"],
+];
 
 const legacyInternalLinks: Record<string, string> = {
   "https://seredoexpo.sa/%d8%a7%d9%84%d8%b9%d8%a7%d8%b1%d8%b6%d9%8a%d9%86/": "/exhibitors",
@@ -32,6 +51,49 @@ const legacyInternalLinks: Record<string, string> = {
 
 function isPlainRecord(value: unknown): value is PlainRecord {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function readPath(value: unknown, path: ContentPath) {
+  return path.reduce<unknown>((current, part) => {
+    if (current === undefined || current === null) {
+      return undefined;
+    }
+
+    return (current as Record<string | number, unknown>)[part];
+  }, value);
+}
+
+function writePath(target: PlainRecord, path: ContentPath, value: unknown) {
+  let current: PlainRecord = target;
+
+  path.forEach((part, index) => {
+    if (index === path.length - 1) {
+      current[part] = clone(value);
+      return;
+    }
+
+    const next = current[part];
+
+    if (!isPlainRecord(next)) {
+      current[part] = {};
+    }
+
+    current = current[part] as PlainRecord;
+  });
+}
+
+function pickEditableContent(content: SiteContent): PlainRecord {
+  const editable: PlainRecord = {};
+
+  for (const path of editableContentPaths) {
+    writePath(editable, path, readPath(content, path));
+  }
+
+  return editable;
 }
 
 function mergeWithDefaults<T>(defaults: T, value: unknown): T {
@@ -69,8 +131,30 @@ function migrateHref(href: string) {
   return legacyInternalLinks[href] ?? href;
 }
 
+function migrateLocalAssetUrls(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => migrateLocalAssetUrls(item));
+  }
+
+  if (isPlainRecord(value)) {
+    for (const [key, nestedValue] of Object.entries(value)) {
+      value[key] = migrateLocalAssetUrls(nestedValue);
+    }
+
+    return value;
+  }
+
+  if (typeof value === "string" && value.startsWith("/assets/seredo/")) {
+    return value.replace(/\.(?:png|jpe?g)$/i, ".webp");
+  }
+
+  return value;
+}
+
 function migrateLegacyContent(content: SiteContent): SiteContent {
   const next = JSON.parse(JSON.stringify(content)) as SiteContent;
+
+  migrateLocalAssetUrls(next);
 
   next.links.exhibitorsPage = migrateHref(next.links.exhibitorsPage);
   next.links.visitorsPage = migrateHref(next.links.visitorsPage);
@@ -133,6 +217,10 @@ export function normalizeSiteContent(value: unknown): SiteContent {
   return migrateLegacyContent(mergeWithDefaults(defaultSiteContent, value));
 }
 
+function normalizeEditableContent(value: unknown) {
+  return pickEditableContent(normalizeSiteContent(value));
+}
+
 async function ensureSiteContentTable(pool: Pool) {
   if (!globalThis.seredoTableReady) {
     globalThis.seredoTableReady = (async () => {
@@ -151,7 +239,7 @@ async function ensureSiteContentTable(pool: Pool) {
         VALUES ($1, $2::jsonb)
         ON CONFLICT (id) DO NOTHING
         `,
-        [CONTENT_ID, JSON.stringify(defaultSiteContent)],
+        [CONTENT_ID, JSON.stringify(pickEditableContent(defaultSiteContent))],
       );
     })();
   }
@@ -176,7 +264,22 @@ export async function getSiteContent(): Promise<SiteContent> {
       [CONTENT_ID],
     );
 
-    return normalizeSiteContent(result.rows[0]?.content);
+    const savedContent = result.rows[0]?.content;
+    const content = normalizeSiteContent(savedContent);
+    const editableContent = pickEditableContent(content);
+
+    if (JSON.stringify(savedContent) !== JSON.stringify(editableContent)) {
+      await pool.query(
+        `
+        UPDATE site_content
+        SET content = $2::jsonb, updated_at = NOW()
+        WHERE id = $1
+        `,
+        [CONTENT_ID, JSON.stringify(editableContent)],
+      );
+    }
+
+    return content;
   } catch (error) {
     console.error("Failed to read site content from Postgres", error);
     return defaultSiteContent;
@@ -199,6 +302,6 @@ export async function saveSiteContent(content: SiteContent) {
     ON CONFLICT (id)
     DO UPDATE SET content = EXCLUDED.content, updated_at = NOW()
     `,
-    [CONTENT_ID, JSON.stringify(normalizeSiteContent(content))],
+    [CONTENT_ID, JSON.stringify(normalizeEditableContent(content))],
   );
 }

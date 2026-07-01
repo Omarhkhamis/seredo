@@ -10,11 +10,15 @@ const PUBLIC_ASSET_DIR = path.join(/* turbopackIgnore: true */ process.cwd(), "p
 const UPLOAD_DIR =
   process.env.UPLOAD_DIR || path.join(/* turbopackIgnore: true */ process.cwd(), "storage", "uploads");
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 120 * 1024 * 1024;
 const allowedMimeTypes = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
   ["image/webp", "webp"],
   ["image/gif", "gif"],
+  ["video/mp4", "mp4"],
+  ["video/webm", "webm"],
+  ["video/quicktime", "mov"],
 ]);
 
 type GalleryImage = {
@@ -22,12 +26,21 @@ type GalleryImage = {
   name: string;
   origin: "assets" | "uploads";
   deletable: boolean;
+  mediaType: "image" | "video";
   size?: number;
   updatedAt?: string;
 };
 
 function isImageFilename(filename: string) {
   return /\.(jpe?g|png|webp|gif)$/i.test(filename);
+}
+
+function isVideoFilename(filename: string) {
+  return /\.(mp4|webm|mov)$/i.test(filename);
+}
+
+function isGalleryFilename(filename: string) {
+  return isImageFilename(filename) || isVideoFilename(filename);
 }
 
 function slugifyFilename(filename: string) {
@@ -49,7 +62,7 @@ function uploadFilenameFromSrc(src: string) {
 
   const filename = decodeURIComponent(src.slice("/uploads/".length).split(/[?#]/)[0] ?? "");
 
-  if (!filename || filename !== path.basename(filename) || !isImageFilename(filename)) {
+  if (!filename || filename !== path.basename(filename) || !isGalleryFilename(filename)) {
     return null;
   }
 
@@ -63,23 +76,41 @@ async function listImagesFromDirectory(
   deletable: boolean,
 ) {
   try {
-    const entries = await readdir(directory, { withFileTypes: true });
-    const images = await Promise.all(
-      entries
-        .filter((entry) => entry.isFile() && isImageFilename(entry.name))
-        .map(async (entry) => {
-          const fileStat = await stat(path.join(directory, entry.name));
+    const walk = async (currentDirectory: string, currentPrefix: string): Promise<GalleryImage[]> => {
+      const entries = await readdir(currentDirectory, { withFileTypes: true });
+      const nested = await Promise.all(
+        entries.map(async (entry) => {
+          const entryPath = path.join(currentDirectory, entry.name);
+          const entrySrc = `${currentPrefix}/${encodeURIComponent(entry.name)}`;
 
-          return {
-            src: `${srcPrefix}/${encodeURIComponent(entry.name)}`,
-            name: entry.name,
-            origin,
-            deletable,
-            size: fileStat.size,
-            updatedAt: fileStat.mtime.toISOString(),
-          } satisfies GalleryImage;
+          if (entry.isDirectory()) {
+            return walk(entryPath, entrySrc);
+          }
+
+          if (!entry.isFile() || !isGalleryFilename(entry.name)) {
+            return [];
+          }
+
+          const fileStat = await stat(entryPath);
+
+          return [
+            {
+              src: entrySrc,
+              name: entry.name,
+              origin,
+              deletable,
+              mediaType: isVideoFilename(entry.name) ? "video" : "image",
+              size: fileStat.size,
+              updatedAt: fileStat.mtime.toISOString(),
+            } satisfies GalleryImage,
+          ];
         }),
-    );
+      );
+
+      return nested.flat();
+    };
+
+    const images = await walk(directory, srcPrefix);
 
     return images.sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
@@ -131,17 +162,23 @@ export async function POST(request: Request) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ message: "لم يتم اختيار ملف صورة." }, { status: 400 });
+      return NextResponse.json({ message: "لم يتم اختيار ملف." }, { status: 400 });
     }
 
     const extension = allowedMimeTypes.get(file.type);
 
     if (!extension) {
-      return NextResponse.json({ message: "صيغة الصورة غير مدعومة." }, { status: 400 });
+      return NextResponse.json({ message: "صيغة الملف غير مدعومة." }, { status: 400 });
     }
 
-    if (file.size > MAX_IMAGE_SIZE) {
-      return NextResponse.json({ message: "حجم الصورة يجب أن لا يتجاوز 8MB." }, { status: 400 });
+    const isVideo = file.type.startsWith("video/");
+    const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { message: isVideo ? "حجم الفيديو يجب أن لا يتجاوز 120MB." : "حجم الصورة يجب أن لا يتجاوز 8MB." },
+        { status: 400 },
+      );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -157,16 +194,17 @@ export async function POST(request: Request) {
       name: filename,
       origin: "uploads",
       deletable: true,
+      mediaType: isVideo ? "video" : "image",
       size: fileStat.size,
       updatedAt: fileStat.mtime.toISOString(),
     };
 
     return NextResponse.json({
       image,
-      message: "تم رفع الصورة بنجاح.",
+      message: "تم رفع الملف بنجاح.",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "تعذر رفع الصورة.";
+    const message = error instanceof Error ? error.message : "تعذر رفع الملف.";
     return NextResponse.json({ message }, { status: 500 });
   }
 }
@@ -187,10 +225,10 @@ export async function DELETE(request: Request) {
     await rm(path.join(UPLOAD_DIR, filename), { force: true });
 
     return NextResponse.json({
-      message: "تم حذف الصورة بنجاح.",
+      message: "تم حذف الملف بنجاح.",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "تعذر حذف الصورة.";
+    const message = error instanceof Error ? error.message : "تعذر حذف الملف.";
     return NextResponse.json({ message }, { status: 500 });
   }
 }

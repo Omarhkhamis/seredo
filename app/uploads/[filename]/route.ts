@@ -12,6 +12,9 @@ const contentTypes: Record<string, string> = {
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".mov": "video/quicktime",
 };
 
 function safeFilename(filename: string) {
@@ -36,7 +39,7 @@ export async function GET(
   const filename = safeFilename(rawFilename);
 
   if (!filename) {
-    return NextResponse.json({ message: "الصورة غير موجودة." }, { status: 404 });
+    return NextResponse.json({ message: "الملف غير موجود." }, { status: 404 });
   }
 
   try {
@@ -50,6 +53,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json({ message: "الصورة غير موجودة." }, { status: 404 });
+    return NextResponse.json({ message: "الملف غير موجود." }, { status: 404 });
   }
 }

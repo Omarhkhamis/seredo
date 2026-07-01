@@ -57,7 +57,7 @@ import { cn } from "@/components/ui/cn";
 
 type PathPart = string | number;
 type Path = PathPart[];
-type FieldType = "text" | "textarea" | "url" | "number" | "password" | "checkbox" | "select" | "icon" | "image";
+type FieldType = "text" | "textarea" | "url" | "number" | "password" | "checkbox" | "select" | "icon" | "image" | "video";
 
 type FieldDef = {
   key: string;
@@ -89,6 +89,7 @@ type GalleryImage = {
   name: string;
   origin: "assets" | "uploads";
   deletable: boolean;
+  mediaType: "image" | "video";
   size?: number;
   updatedAt?: string;
 };
@@ -98,33 +99,15 @@ type GalleryTarget = {
 } | null;
 
 const sections = [
-  { id: "metadata", label: "البيانات الأساسية", icon: FileText },
-  { id: "links-assets", label: "الروابط والأصول", icon: Link },
-  { id: "gallery", label: "معرض الصور", icon: ImagePlus },
-  { id: "header", label: "الهيدر والتنقل", icon: Menu },
-  { id: "hero", label: "الهيرو", icon: Image },
-  { id: "event", label: "معلومات الحدث", icon: CalendarDays },
-  { id: "about", label: "عن سيريدو", icon: Info },
-  { id: "pillars", label: "المحاور", icon: ListChecks },
-  { id: "tracks", label: "مسارات التسجيل", icon: Building2 },
-  { id: "visitors-page", label: "صفحة الزوار", icon: UsersRound },
-  { id: "exhibitors-page", label: "صفحة العارضين", icon: Building2 },
-  { id: "sponsors-page", label: "صفحة الرعاة", icon: Handshake },
-  { id: "media-page", label: "المركز الإعلامي", icon: Newspaper },
-  { id: "privacy-page", label: "سياسة الخصوصية", icon: ShieldCheck },
-  { id: "deep-about", label: "عن سيريدو الموسع", icon: Layers },
-  { id: "ecosystem", label: "منظومة الأعمال", icon: Handshake },
-  { id: "stats", label: "الإحصائيات", icon: BarChart3 },
-  { id: "audience", label: "الجمهور", icon: UsersRound },
-  { id: "sectors", label: "القطاعات", icon: Layers },
+  { id: "general", label: "إعدادات عامة", icon: Settings },
+  { id: "gallery", label: "المعرض", icon: ImagePlus },
+  { id: "hero", label: "فيديو الهيرو", icon: Video },
   { id: "partners", label: "الشركاء", icon: Handshake },
-  { id: "final-cta", label: "النداء الأخير", icon: Megaphone },
   { id: "footer", label: "الفوتر", icon: FileText },
-  { id: "social", label: "التواصل الاجتماعي", icon: Share2 },
   { id: "admins", label: "المدراء", icon: ShieldCheck },
 ] as const;
 
-type SectionId = (typeof sections)[number]["id"];
+type SectionId = string;
 type DashboardGroupId = "main" | "pages" | "settings";
 
 const dashboardGroups: Array<{
@@ -134,40 +117,15 @@ const dashboardGroups: Array<{
   sectionIds: SectionId[];
 }> = [
   {
-    id: "main",
-    label: "الرئيسية",
-    icon: Home,
-    sectionIds: [
-      "hero",
-      "event",
-      "about",
-      "pillars",
-      "tracks",
-      "deep-about",
-      "ecosystem",
-      "stats",
-      "audience",
-      "sectors",
-      "partners",
-      "final-cta",
-    ],
-  },
-  {
-    id: "pages",
-    label: "الصفحات",
-    icon: FileText,
-    sectionIds: ["visitors-page", "exhibitors-page", "sponsors-page", "media-page", "privacy-page"],
-  },
-  {
     id: "settings",
-    label: "باقي الإعدادات",
+    label: "الإعدادات العامة",
     icon: Settings,
-    sectionIds: ["metadata", "links-assets", "gallery", "header", "footer", "social", "admins"],
+    sectionIds: ["general", "gallery", "hero", "partners", "footer", "admins"],
   },
 ];
 
 const sectionsById = Object.fromEntries(sections.map((section) => [section.id, section])) as Record<
-  SectionId,
+  string,
   (typeof sections)[number]
 >;
 
@@ -628,6 +586,58 @@ function DashboardImageField({
   );
 }
 
+function DashboardVideoField({
+  label,
+  value,
+  onChange,
+  onOpenGallery,
+}: {
+  label: string;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  onOpenGallery?: (value: string, onSelect: (src: string) => void) => void;
+}) {
+  const src = fieldValue(value);
+
+  return (
+    <div className="block text-sm font-extrabold text-ink">
+      <span>{label}</span>
+      <div className="mt-2 rounded-md border border-line bg-white p-3 shadow-sm">
+        <div className="grid gap-3">
+          <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-line bg-brand-900">
+            {src ? (
+              <video src={src} className="h-full w-full object-contain" controls muted playsInline />
+            ) : (
+              <Video size={28} className="text-white/70" aria-hidden="true" />
+            )}
+          </div>
+          <p className="truncate text-xs font-bold text-muted">{src || "لم يتم اختيار فيديو"}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onOpenGallery?.(src, (nextSrc) => onChange(nextSrc))}
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-brand-600 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-brand-800"
+            >
+              <ImagePlus size={15} aria-hidden="true" />
+              اختيار من المعرض
+            </button>
+            {src ? (
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-line bg-white text-muted transition hover:bg-mist hover:text-ink"
+                aria-label={`إزالة ${label}`}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardField({
   label,
   value,
@@ -666,6 +676,10 @@ function DashboardField({
 
   if (type === "image") {
     return <DashboardImageField label={label} value={value} onChange={onChange} onOpenGallery={onOpenGallery} />;
+  }
+
+  if (type === "video") {
+    return <DashboardVideoField label={label} value={value} onChange={onChange} onOpenGallery={onOpenGallery} />;
   }
 
   if (type === "textarea") {
@@ -858,21 +872,21 @@ export function SiteDashboard({
         }
 
         if (!response.ok || !payload.image) {
-          throw new Error(payload.message ?? "تعذر رفع الصورة.");
+          throw new Error(payload.message ?? "تعذر رفع الملف.");
         }
 
         uploadedImages.push(payload.image);
       }
 
       setGalleryImages((current) => dedupeGalleryImages([...uploadedImages, ...current]));
-      showSaveToast(uploadedImages.length > 1 ? "تم رفع الصور" : "تم رفع الصورة");
+      showSaveToast(uploadedImages.length > 1 ? "تم رفع الملفات" : "تم رفع الملف");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "تعذر رفع الصورة.";
+      const errorMessage = error instanceof Error ? error.message : "تعذر رفع الملف.";
       setMessage(errorMessage);
       setMessageType("error");
       void Swal.fire({
         icon: "error",
-        title: "تعذر رفع الصورة",
+        title: "تعذر رفع الملف",
         text: errorMessage,
         confirmButtonText: "حسناً",
         confirmButtonColor: "#25396E",
@@ -883,7 +897,7 @@ export function SiteDashboard({
   };
 
   const deleteGalleryImage = async (image: GalleryImage) => {
-    if (!image.deletable || !(await confirmDelete("تأكيد حذف الصورة"))) {
+    if (!image.deletable || !(await confirmDelete("تأكيد حذف الملف"))) {
       return;
     }
 
@@ -903,18 +917,18 @@ export function SiteDashboard({
       }
 
       if (!response.ok) {
-        throw new Error(payload.message ?? "تعذر حذف الصورة.");
+        throw new Error(payload.message ?? "تعذر حذف الملف.");
       }
 
       setGalleryImages((current) => current.filter((item) => item.src !== image.src));
-      showSaveToast(payload.message ?? "تم حذف الصورة");
+      showSaveToast(payload.message ?? "تم حذف الملف");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "تعذر حذف الصورة.";
+      const errorMessage = error instanceof Error ? error.message : "تعذر حذف الملف.";
       setMessage(errorMessage);
       setMessageType("error");
       void Swal.fire({
         icon: "error",
-        title: "تعذر حذف الصورة",
+        title: "تعذر حذف الملف",
         text: errorMessage,
         confirmButtonText: "حسناً",
         confirmButtonColor: "#25396E",
@@ -1478,7 +1492,7 @@ export function SiteDashboard({
     );
   };
 
-  const renderGalleryUploadButton = (label = "رفع صور") => (
+  const renderGalleryUploadButton = (label = "رفع ملفات") => (
     <label
       className={cn(
         "inline-flex min-h-10 items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-extrabold text-white transition hover:bg-brand-800",
@@ -1489,7 +1503,7 @@ export function SiteDashboard({
       {label}
       <input
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif"
+        accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
         multiple
         className="hidden"
         disabled={isGalleryUploading}
@@ -1532,7 +1546,11 @@ export function SiteDashboard({
                 selectable && "transition hover:bg-brand-50",
               )}
             >
-              <img src={image.src} alt="" className="h-full w-full object-contain" />
+              {image.mediaType === "video" ? (
+                <video src={image.src} className="h-full w-full object-contain" muted playsInline />
+              ) : (
+                <img src={image.src} alt="" className="h-full w-full object-contain" />
+              )}
             </button>
 
             <div className="grid gap-3 p-3">
@@ -1540,6 +1558,7 @@ export function SiteDashboard({
                 <p className="truncate text-sm font-black text-ink">{image.name}</p>
                 <p className="mt-1 truncate text-xs font-bold text-muted">
                   {image.origin === "uploads" ? "مرفوعة" : "أصلية"}
+                  {` · ${image.mediaType === "video" ? "فيديو" : "صورة"}`}
                   {fileSize ? ` · ${fileSize}` : ""}
                 </p>
               </div>
@@ -1566,7 +1585,7 @@ export function SiteDashboard({
 
   const renderGalleryManager = () => (
     <EditorCard
-      title="معرض الصور"
+      title="المعرض"
       action={
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -1590,7 +1609,7 @@ export function SiteDashboard({
         renderGalleryGrid()
       ) : (
         <div className="rounded-lg border border-dashed border-line bg-surface p-8 text-center text-sm font-bold text-muted">
-          لا توجد صور في المعرض.
+          لا توجد ملفات في المعرض.
         </div>
       )}
     </EditorCard>
@@ -1739,6 +1758,32 @@ export function SiteDashboard({
 
   const activeContent = () => {
     switch (activeSection) {
+      case "general":
+        return (
+          <div className="grid gap-5">
+            <EditorCard title="بيانات عامة">
+              {renderFields(
+                ["metadata"],
+                [
+                  { key: "title", label: "عنوان الموقع" },
+                  { key: "description", label: "وصف الموقع", type: "textarea" },
+                ],
+                "md:grid-cols-1",
+              )}
+            </EditorCard>
+            <EditorCard title="روابط أساسية">
+              {renderFields(["links"], [
+                { key: "visitorRegistration", label: "رابط تسجيل الزائر", type: "url" },
+                { key: "exhibitorRegistration", label: "رابط تسجيل العارض", type: "url" },
+                { key: "whatsapp", label: "رابط واتساب", type: "url" },
+                { key: "email", label: "البريد الإلكتروني" },
+                { key: "phone", label: "الهاتف" },
+                { key: "map", label: "رابط الخريطة", type: "url" },
+              ])}
+            </EditorCard>
+          </div>
+        );
+
       case "metadata":
         return (
           <EditorCard title="البيانات الأساسية">
@@ -1795,46 +1840,26 @@ export function SiteDashboard({
       case "hero":
         return (
           <div className="grid gap-5">
-            <EditorCard title="الهيرو">
+            <EditorCard title="فيديو الهيرو">
               {renderFields(
-                ["hero"],
+                ["assets"],
                 [
-                  { key: "title", label: "العنوان" },
-                  { key: "subtitle", label: "الوصف", type: "textarea" },
-                  { key: "imageAlt", label: "النص البديل للصورة" },
-                  { key: "figureTitle", label: "عنوان الصورة" },
-                  { key: "figureDescription", label: "وصف الصورة", type: "textarea" },
+                  { key: "heroVideo", label: "فيديو الهيرو", type: "video" },
+                  { key: "heroPoster", label: "غلاف الفيديو", type: "image" },
                 ],
                 "md:grid-cols-1",
               )}
             </EditorCard>
-            {renderStringList("نقاط الهيرو", ["hero", "highlights"], "نقطة")}
-            <EditorCard title="أزرار الهيرو">
-              <div className="grid gap-5 md:grid-cols-2">
-                <div className="rounded-lg border border-line bg-surface p-4">
-                  {renderFields(["hero", "primaryButton"], [
-                    { key: "label", label: "نص الزر الأساسي" },
-                    { key: "href", label: "رابط الزر الأساسي", type: "url" },
-                  ])}
-                </div>
-                <div className="rounded-lg border border-line bg-surface p-4">
-                  {renderFields(["hero", "secondaryButton"], [
-                    { key: "label", label: "نص الزر الثاني" },
-                    { key: "href", label: "رابط الزر الثاني", type: "url" },
-                  ])}
-                </div>
-              </div>
-            </EditorCard>
-            <EditorCard title="العد التنازلي">
-              {renderFields(["hero", "countdown"], [
-                { key: "targetDate", label: "تاريخ ووقت الانطلاق" },
-                { key: "title", label: "عنوان العداد" },
-                { key: "location", label: "الموقع" },
-                { key: "daysLabel", label: "تسمية الأيام" },
-                { key: "hoursLabel", label: "تسمية الساعات" },
-                { key: "minutesLabel", label: "تسمية الدقائق" },
-                { key: "secondsLabel", label: "تسمية الثواني" },
-              ])}
+            <EditorCard title="نص البطاقة">
+              {renderFields(
+                ["hero"],
+                [
+                  { key: "imageAlt", label: "وصف الفيديو" },
+                  { key: "figureTitle", label: "عنوان البطاقة" },
+                  { key: "figureDescription", label: "وصف البطاقة", type: "textarea" },
+                ],
+                "md:grid-cols-1",
+              )}
             </EditorCard>
           </div>
         );
@@ -2542,16 +2567,16 @@ export function SiteDashboard({
             type="button"
             className="absolute inset-0 h-full w-full cursor-default"
             onClick={closeGalleryModal}
-            aria-label="إغلاق معرض الصور"
+            aria-label="إغلاق المعرض"
           />
           <section className="relative z-10 flex max-h-[88vh] w-[min(1060px,100%)] flex-col overflow-hidden rounded-lg border border-line bg-white shadow-strong">
             <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-4">
               <div>
-                <h2 className="text-xl text-brand-800">معرض الصور</h2>
-                <p className="mt-1 text-xs font-bold text-muted">{galleryImages.length} صورة</p>
+                <h2 className="text-xl text-brand-800">المعرض</h2>
+                <p className="mt-1 text-xs font-bold text-muted">{galleryImages.length} ملف</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {renderGalleryUploadButton("رفع صورة")}
+                {renderGalleryUploadButton("رفع ملف")}
                 <button
                   type="button"
                   onClick={() => void loadGalleryImages()}
@@ -2581,7 +2606,7 @@ export function SiteDashboard({
                 renderGalleryGrid(true)
               ) : (
                 <div className="rounded-lg border border-dashed border-line bg-surface p-8 text-center text-sm font-bold text-muted">
-                  لا توجد صور في المعرض.
+                  لا توجد ملفات في المعرض.
                 </div>
               )}
             </div>

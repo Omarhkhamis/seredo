@@ -21,13 +21,13 @@ const siteLinks = {
 };
 
 const siteAssets = {
-  logo: "/assets/seredo/seredo-logo.png",
+  logo: "/assets/seredo/seredo-logo.webp",
   heroVideo: "/assets/seredo/hero-video.mp4",
-  heroPoster: "/assets/seredo/hero-poster.png",
-  aboutImage: "/assets/seredo/about-expo.jpg",
-  networkImage: "/assets/seredo/network-city.jpg",
-  venueLogo: "/assets/seredo/jeddah-superdome.png",
-  organizerLogo: "/assets/seredo/organizer-logo.png",
+  heroPoster: "/assets/seredo/hero-poster.webp",
+  aboutImage: "/assets/seredo/about-expo.webp",
+  networkImage: "/assets/seredo/network-city.webp",
+  venueLogo: "/assets/seredo/jeddah-superdome.webp",
+  organizerLogo: "/assets/seredo/organizer-logo.webp",
 };
 
 export const defaultSiteContent = {
@@ -257,35 +257,35 @@ export const defaultSiteContent = {
         items: [
           {
             name: "وزارة البلديات والإسكان",
-            logo: "/assets/seredo/partners/partner-001-ministry-of-housing-6-scaled-e1781591519236.jpg",
+            logo: "/assets/seredo/partners/partner-001-ministry-of-housing-6-scaled-e1781591519236.webp",
           },
           {
             name: "NHC",
-            logo: "/assets/seredo/partners/partner-002-nhc-logo-ntlgreen-h-rgb.png",
+            logo: "/assets/seredo/partners/partner-002-nhc-logo-ntlgreen-h-rgb.webp",
           },
           {
             name: "جهة حكومية",
-            logo: "/assets/seredo/partners/partner-003-untitled-22-2026-12-10-44.png",
+            logo: "/assets/seredo/partners/partner-003-untitled-22-2026-12-10-44.webp",
           },
           {
             name: "غرفة جدة",
-            logo: "/assets/seredo/partners/partner-004-page-0001-scaled-e1781591478427.jpg",
+            logo: "/assets/seredo/partners/partner-004-page-0001-scaled-e1781591478427.webp",
           },
           {
             name: "أمانة جدة",
-            logo: "/assets/seredo/partners/partner-005-jeddah-municipality-logo-page-0001-scaled-e1781591459845.jpg",
+            logo: "/assets/seredo/partners/partner-005-jeddah-municipality-logo-page-0001-scaled-e1781591459845.webp",
           },
           {
             name: "الهيئة العامة للعقار",
-            logo: "/assets/seredo/partners/partner-006-rega-logo-page-0001-scaled.jpg",
+            logo: "/assets/seredo/partners/partner-006-rega-logo-page-0001-scaled.webp",
           },
           {
             name: "جهة حكومية",
-            logo: "/assets/seredo/partners/partner-007-60409-e1781591431483.jpg",
+            logo: "/assets/seredo/partners/partner-007-60409-e1781591431483.webp",
           },
           {
             name: "غرفة مكة",
-            logo: "/assets/seredo/partners/partner-008-makkah-chamber-of-commerce-logo.png",
+            logo: "/assets/seredo/partners/partner-008-makkah-chamber-of-commerce-logo.webp",
           },
         ],
       },
@@ -295,23 +295,23 @@ export const defaultSiteContent = {
         items: [
           {
             name: "بنك البلاد",
-            logo: "/assets/seredo/partners/partner-013-bank-albilad-logo.png",
+            logo: "/assets/seredo/partners/partner-013-bank-albilad-logo.webp",
           },
           {
             name: "البنك السعودي للاستثمار",
-            logo: "/assets/seredo/partners/partner-012-logo.png",
+            logo: "/assets/seredo/partners/partner-012-logo.webp",
           },
           {
             name: "البنك الأهلي السعودي",
-            logo: "/assets/seredo/partners/partner-011-snb-brandmark-artwork-cmyk-primary.png",
+            logo: "/assets/seredo/partners/partner-011-snb-brandmark-artwork-cmyk-primary.webp",
           },
           {
             name: "البنك العربي الوطني",
-            logo: "/assets/seredo/partners/partner-010-anb-logo-4m-bank-e1781594579153.png",
+            logo: "/assets/seredo/partners/partner-010-anb-logo-4m-bank-e1781594579153.webp",
           },
           {
             name: "مصرف الإنماء",
-            logo: "/assets/seredo/partners/partner-009-alinma-bank-logo-cmyk-2-scaled.png",
+            logo: "/assets/seredo/partners/partner-009-alinma-bank-logo-cmyk-2-scaled.webp",
           },
         ],
       },
@@ -320,73 +320,325 @@ export const defaultSiteContent = {
         countLabel: "شريط متحرك",
         items: [
           {
-            name: "التطوير الشامل",
-            logo: "/assets/seredo/exhibitor-tatweer-shamel.png",
+            name: "عارض 01",
+            logo: "/assets/seredo/exp/exp1.webp",
           },
           {
-            name: "السعيدان للعقارات",
-            logo: "/assets/seredo/exhibitor-alsaidan.jpg",
+            name: "عارض 02",
+            logo: "/assets/seredo/exp/exp2.webp",
           },
           {
-            name: "مايا",
-            logo: "/assets/seredo/exhibitor-maya.png",
+            name: "عارض 03",
+            logo: "/assets/seredo/exp/exp3.webp",
           },
           {
-            name: "عبر المملكة العقارية",
-            logo: "/assets/seredo/exhibitor-abr-almamlaka.png",
+            name: "عارض 04",
+            logo: "/assets/seredo/exp/exp4.webp",
           },
           {
-            name: "Jenan",
-            logo: "/assets/seredo/exhibitor-jenan.png",
+            name: "عارض 05",
+            logo: "/assets/seredo/exp/exp5.webp",
           },
           {
-            name: "أمكن للتطوير العقاري",
-            logo: "/assets/seredo/exhibitor-amkan.jpg",
+            name: "عارض 06",
+            logo: "/assets/seredo/exp/exp6.webp",
           },
           {
-            name: "Shifted",
-            logo: "/assets/seredo/exhibitor-shifted.jpg",
+            name: "عارض 07",
+            logo: "/assets/seredo/exp/exp7.webp",
           },
           {
-            name: "Ydar",
-            logo: "/assets/seredo/exhibitor-ydar.jpg",
+            name: "عارض 08",
+            logo: "/assets/seredo/exp/exp8.webp",
           },
           {
-            name: "Rafal",
-            logo: "/assets/seredo/exhibitor-rafal.jpg",
+            name: "عارض 09",
+            logo: "/assets/seredo/exp/exp9.webp",
           },
           {
-            name: "ADL",
-            logo: "/assets/seredo/exhibitor-adl.jpg",
+            name: "عارض 10",
+            logo: "/assets/seredo/exp/exp10.webp",
           },
           {
-            name: "منازل الشعلة العقارية",
-            logo: "/assets/seredo/exhibitor-manazel-alshoula.jpg",
+            name: "عارض 11",
+            logo: "/assets/seredo/exp/exp11.webp",
           },
           {
-            name: "البرنامج الوطني للتشجير",
-            logo: "/assets/seredo/exhibitor-national-afforestation.jpg",
+            name: "عارض 12",
+            logo: "/assets/seredo/exp/exp12.webp",
           },
           {
-            name: "Tilal Khuzam",
-            logo: "/assets/seredo/exhibitor-tilal-khuzam.jpg",
+            name: "عارض 13",
+            logo: "/assets/seredo/exp/exp13.webp",
           },
           {
-            name: "Tilal Real Estate",
-            logo: "/assets/seredo/exhibitor-tilal-real-estate.jpg",
+            name: "عارض 14",
+            logo: "/assets/seredo/exp/exp14.webp",
           },
           {
-            name: "مكيون مطورون عمرانيون",
-            logo: "/assets/seredo/exhibitor-makyoon.png",
+            name: "عارض 15",
+            logo: "/assets/seredo/exp/exp15.webp",
           },
           {
-            name: "Retal",
-            logo: "/assets/seredo/exhibitor-retal.png",
+            name: "عارض 16",
+            logo: "/assets/seredo/exp/exp16.webp",
           },
           {
-            name: "Ajdan",
-            logo: "/assets/seredo/exhibitor-ajdan.png",
+            name: "عارض 17",
+            logo: "/assets/seredo/exp/exp17.webp",
           },
+          {
+            name: "عارض 18",
+            logo: "/assets/seredo/exp/exp18.webp",
+          },
+          {
+            name: "عارض 19",
+            logo: "/assets/seredo/exp/exp19.webp",
+          },
+          {
+            name: "عارض 20",
+            logo: "/assets/seredo/exp/exp20.webp",
+          },
+          {
+            name: "عارض 21",
+            logo: "/assets/seredo/exp/exp21.webp",
+          },
+          {
+            name: "عارض 22",
+            logo: "/assets/seredo/exp/exp22.webp",
+          },
+          {
+            name: "عارض 23",
+            logo: "/assets/seredo/exp/exp23.webp",
+          },
+          {
+            name: "عارض 24",
+            logo: "/assets/seredo/exp/exp24.webp",
+          },
+          {
+            name: "عارض 25",
+            logo: "/assets/seredo/exp/exp25.webp",
+          },
+          {
+            name: "عارض 26",
+            logo: "/assets/seredo/exp/exp26.webp",
+          },
+          {
+            name: "عارض 27",
+            logo: "/assets/seredo/exp/exp27.webp",
+          },
+          {
+            name: "عارض 28",
+            logo: "/assets/seredo/exp/exp28.webp",
+          },
+          {
+            name: "عارض 29",
+            logo: "/assets/seredo/exp/exp29.webp",
+          },
+          {
+            name: "عارض 30",
+            logo: "/assets/seredo/exp/exp30.webp",
+          },
+          {
+            name: "عارض 31",
+            logo: "/assets/seredo/exp/exp31.webp",
+          },
+          {
+            name: "عارض 32",
+            logo: "/assets/seredo/exp/exp32.webp",
+          },
+          {
+            name: "عارض 33",
+            logo: "/assets/seredo/exp/exp33.webp",
+          },
+          {
+            name: "عارض 34",
+            logo: "/assets/seredo/exp/exp34.webp",
+          },
+          {
+            name: "عارض 35",
+            logo: "/assets/seredo/exp/exp35.webp",
+          },
+          {
+            name: "عارض 36",
+            logo: "/assets/seredo/exp/exp36.webp",
+          },
+          {
+            name: "عارض 37",
+            logo: "/assets/seredo/exp/exp37.webp",
+          },
+          {
+            name: "عارض 38",
+            logo: "/assets/seredo/exp/exp38.webp",
+          },
+          {
+            name: "عارض 39",
+            logo: "/assets/seredo/exp/exp39.webp",
+          },
+          {
+            name: "عارض 40",
+            logo: "/assets/seredo/exp/exp40.webp",
+          },
+          {
+            name: "عارض 41",
+            logo: "/assets/seredo/exp/exp41.webp",
+          },
+          {
+            name: "عارض 42",
+            logo: "/assets/seredo/exp/exp42.webp",
+          },
+          {
+            name: "عارض 43",
+            logo: "/assets/seredo/exp/exp43.webp",
+          },
+          {
+            name: "عارض 44",
+            logo: "/assets/seredo/exp/exp44.webp",
+          },
+          {
+            name: "عارض 45",
+            logo: "/assets/seredo/exp/exp45.webp",
+          },
+          {
+            name: "عارض 46",
+            logo: "/assets/seredo/exp/exp46.webp",
+          },
+          {
+            name: "عارض 47",
+            logo: "/assets/seredo/exp/exp47.webp",
+          },
+          {
+            name: "عارض 48",
+            logo: "/assets/seredo/exp/exp48.webp",
+          },
+          {
+            name: "عارض 49",
+            logo: "/assets/seredo/exp/exp49.webp",
+          },
+          {
+            name: "عارض 50",
+            logo: "/assets/seredo/exp/exp50.webp",
+          },
+          {
+            name: "عارض 51",
+            logo: "/assets/seredo/exp/exp51.webp",
+          },
+          {
+            name: "عارض 52",
+            logo: "/assets/seredo/exp/exp52.webp",
+          },
+          {
+            name: "عارض 53",
+            logo: "/assets/seredo/exp/exp53.webp",
+          },
+          {
+            name: "عارض 54",
+            logo: "/assets/seredo/exp/exp54.webp",
+          },
+          {
+            name: "عارض 55",
+            logo: "/assets/seredo/exp/exp55.webp",
+          },
+          {
+            name: "عارض 56",
+            logo: "/assets/seredo/exp/exp56.webp",
+          },
+          {
+            name: "عارض 57",
+            logo: "/assets/seredo/exp/exp57.webp",
+          },
+          {
+            name: "عارض 58",
+            logo: "/assets/seredo/exp/exp58.webp",
+          },
+          {
+            name: "عارض 59",
+            logo: "/assets/seredo/exp/exp59.webp",
+          },
+          {
+            name: "عارض 60",
+            logo: "/assets/seredo/exp/exp60.webp",
+          },
+          {
+            name: "عارض 61",
+            logo: "/assets/seredo/exp/exp61.webp",
+          },
+          {
+            name: "عارض 62",
+            logo: "/assets/seredo/exp/exp62.webp",
+          },
+          {
+            name: "عارض 63",
+            logo: "/assets/seredo/exp/exp63.webp",
+          },
+          {
+            name: "عارض 64",
+            logo: "/assets/seredo/exp/exp64.webp",
+          },
+          {
+            name: "عارض 65",
+            logo: "/assets/seredo/exp/exp65.webp",
+          },
+          {
+            name: "عارض 66",
+            logo: "/assets/seredo/exp/exp66.webp",
+          },
+          {
+            name: "عارض 67",
+            logo: "/assets/seredo/exp/exp67.webp",
+          },
+          {
+            name: "عارض 68",
+            logo: "/assets/seredo/exp/exp68.webp",
+          },
+          {
+            name: "عارض 69",
+            logo: "/assets/seredo/exp/exp69.webp",
+          },
+          {
+            name: "عارض 70",
+            logo: "/assets/seredo/exp/exp70.webp",
+          },
+          {
+            name: "عارض 71",
+            logo: "/assets/seredo/exp/exp71.webp",
+          },
+          {
+            name: "عارض 72",
+            logo: "/assets/seredo/exp/exp72.webp",
+          },
+          {
+            name: "عارض 73",
+            logo: "/assets/seredo/exp/exp73.webp",
+          },
+          {
+            name: "عارض 74",
+            logo: "/assets/seredo/exp/exp74.webp",
+          },
+          {
+            name: "عارض 75",
+            logo: "/assets/seredo/exp/exp75.webp",
+          },
+          {
+            name: "عارض 76",
+            logo: "/assets/seredo/exp/exp76.webp",
+          },
+          {
+            name: "عارض 77",
+            logo: "/assets/seredo/exp/exp77.webp",
+          },
+          {
+            name: "عارض 78",
+            logo: "/assets/seredo/exp/exp78.webp",
+          },
+          {
+            name: "عارض 79",
+            logo: "/assets/seredo/exp/exp79.webp",
+          },
+          {
+            name: "عارض 80",
+            logo: "/assets/seredo/exp/exp80.webp",
+          }
         ],
       },
       media: {
@@ -395,11 +647,11 @@ export const defaultSiteContent = {
         items: [
           {
             name: "أملاك",
-            logo: "/assets/seredo/media-amlak.jpg",
+            logo: "/assets/seredo/media-amlak.webp",
           },
           {
             name: "نهدي العقارية",
-            logo: "/assets/seredo/media-nahdi.jpg",
+            logo: "/assets/seredo/media-nahdi.webp",
           },
         ],
       },
@@ -462,23 +714,3 @@ export const defaultSiteContent = {
 
 export type SiteContent = typeof defaultSiteContent;
 export type SiteContentPartner = SiteContent["partnersSection"]["groups"]["government"]["items"][number];
-
-export const links = defaultSiteContent.links;
-export const assets = defaultSiteContent.assets;
-export const navItems = defaultSiteContent.header.navItems;
-export const eventDetails = defaultSiteContent.eventInfo.items;
-export const aboutParagraphs = defaultSiteContent.about.paragraphs;
-export const pillars = defaultSiteContent.pillarsSection.items;
-export const tracks = defaultSiteContent.tracksSection.items;
-export const deepAbout = defaultSiteContent.deepAboutSection;
-export const ecosystemCards = defaultSiteContent.ecosystemSection.cards;
-export const stats = defaultSiteContent.statsSection.items;
-export const audience = defaultSiteContent.audienceSection.items;
-export const sectors = defaultSiteContent.sectorsSection.items;
-export const partners = {
-  government: defaultSiteContent.partnersSection.groups.government.items,
-  finance: defaultSiteContent.partnersSection.groups.finance.items,
-  exhibitors: defaultSiteContent.partnersSection.groups.exhibitors.items,
-  media: defaultSiteContent.partnersSection.groups.media.items,
-};
-export const socialLinks = defaultSiteContent.socialLinks;
