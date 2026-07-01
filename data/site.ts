@@ -257,35 +257,35 @@ export const defaultSiteContent = {
         items: [
           {
             name: "وزارة البلديات والإسكان",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/MINISTRY-OF-HOUSING_6-scaled-e1781591519236.jpg",
+            logo: "/assets/seredo/partners/partner-001-ministry-of-housing-6-scaled-e1781591519236.jpg",
           },
           {
             name: "NHC",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/NHC_Logo_NTLGreen_H_RGB.png",
+            logo: "/assets/seredo/partners/partner-002-nhc-logo-ntlgreen-h-rgb.png",
           },
           {
             name: "جهة حكومية",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/Untitled-22-يونيو-2026-في-12.10.44.png",
+            logo: "/assets/seredo/partners/partner-003-untitled-22-2026-12-10-44.png",
           },
           {
             name: "غرفة جدة",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/شعار-غرفة-جدة__page-0001-scaled-e1781591478427.jpg",
+            logo: "/assets/seredo/partners/partner-004-page-0001-scaled-e1781591478427.jpg",
           },
           {
             name: "أمانة جدة",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/Jeddah-Municipality-Logo_page-0001-scaled-e1781591459845.jpg",
+            logo: "/assets/seredo/partners/partner-005-jeddah-municipality-logo-page-0001-scaled-e1781591459845.jpg",
           },
           {
             name: "الهيئة العامة للعقار",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/REGA-LOGO_page-0001-scaled.jpg",
+            logo: "/assets/seredo/partners/partner-006-rega-logo-page-0001-scaled.jpg",
           },
           {
             name: "جهة حكومية",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/60409-e1781591431483.jpg",
+            logo: "/assets/seredo/partners/partner-007-60409-e1781591431483.jpg",
           },
           {
             name: "غرفة مكة",
-            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/MAKKAH-CHAMBER-OF-COMMERCE-LOGO.png",
+            logo: "/assets/seredo/partners/partner-008-makkah-chamber-of-commerce-logo.png",
           },
         ],
       },
@@ -295,23 +295,23 @@ export const defaultSiteContent = {
         items: [
           {
             name: "بنك البلاد",
-            logo: "/assets/seredo/finance-bank-albilad.png",
+            logo: "/assets/seredo/partners/partner-013-bank-albilad-logo.png",
           },
           {
             name: "البنك السعودي للاستثمار",
-            logo: "/assets/seredo/finance-saib.png",
+            logo: "/assets/seredo/partners/partner-012-logo.png",
           },
           {
             name: "البنك الأهلي السعودي",
-            logo: "/assets/seredo/finance-snb.png",
+            logo: "/assets/seredo/partners/partner-011-snb-brandmark-artwork-cmyk-primary.png",
           },
           {
             name: "البنك العربي الوطني",
-            logo: "/assets/seredo/finance-anb.png",
+            logo: "/assets/seredo/partners/partner-010-anb-logo-4m-bank-e1781594579153.png",
           },
           {
             name: "مصرف الإنماء",
-            logo: "/assets/seredo/finance-alinma.png",
+            logo: "/assets/seredo/partners/partner-009-alinma-bank-logo-cmyk-2-scaled.png",
           },
         ],
       },

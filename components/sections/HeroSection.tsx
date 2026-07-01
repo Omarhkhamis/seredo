@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { ArrowLeft, CalendarDays, Clock3, MapPin } from "lucide-react";
 import { defaultSiteContent, type SiteContent } from "@/data/site";
 import { Countdown } from "@/components/ui/Countdown";
@@ -22,21 +21,21 @@ export function HeroSection({ site = defaultSiteContent }: HeroSectionProps) {
         backgroundSize: "96px 96px, 96px 96px, 100% 100%",
       }}
     >
-      <div
-        className="relative z-10 mx-auto grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-16"
-        style={{ width: "min(1620px, calc(100% - clamp(24px, 6vw, 104px)))" }}
-      >
+      <div className="section-container relative z-10 grid gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-16">
         <div className="reveal order-2 lg:pt-[124px]" data-delay="2">
           <figure className="relative mx-auto aspect-[1.04/1] w-full max-w-[600px] overflow-hidden rounded-[28px] border border-brand-600/10 bg-brand-900 shadow-strong">
-            <Image
-              src={assets.networkImage}
-              alt={hero.imageAlt}
-              fill
-              priority
-              loading="eager"
-              sizes="(min-width: 1024px) 42vw, 100vw"
-              className="object-cover"
-            />
+            <video
+              className="h-full w-full object-cover"
+              poster={assets.heroPoster}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label={hero.imageAlt}
+            >
+              <source src={assets.heroVideo} type="video/mp4" />
+            </video>
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,51,0.68),rgba(15,23,51,0.18)_44%,rgba(15,23,51,0.04))]" />
             <figcaption className="absolute inset-x-6 top-12 text-center text-white sm:inset-x-9">
               <h2 className="font-display text-2xl font-black leading-tight text-white sm:text-3xl">{hero.figureTitle}</h2>
