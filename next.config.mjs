@@ -54,6 +54,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "seredoexpo.sa",
       },
+      {
+        protocol: "https",
+        hostname: "i.postimg.cc",
+      },
     ],
   },
 };

@@ -15,6 +15,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-seredo}
       POSTGRES_SSL: "false"
       ADMIN_COOKIE_SECURE: ${ADMIN_COOKIE_SECURE:-true}
+      GOOGLE_REGISTRATION_WEBHOOK_URL: ${GOOGLE_REGISTRATION_WEBHOOK_URL:-}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     volumes:

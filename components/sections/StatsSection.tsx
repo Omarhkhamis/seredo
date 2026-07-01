@@ -13,10 +13,6 @@ export function StatsSection({ site = defaultSiteContent }: StatsSectionProps) {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:54px_54px] opacity-80" />
       <div className="section-container relative">
         <div className="reveal mx-auto mb-10 max-w-3xl text-center">
-          <span className="eyebrow border-white/20 bg-white/10 text-white">
-            <span className="eyebrow-dot bg-teal-300" />
-            {section.eyebrow}
-          </span>
           <h2 className="mt-5 font-display text-3xl font-black text-white sm:text-4xl lg:text-5xl">{section.title}</h2>
         </div>
 

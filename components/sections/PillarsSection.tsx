@@ -11,8 +11,8 @@ export function PillarsSection({ site = defaultSiteContent }: PillarsSectionProp
   return (
     <section className="section-pad bg-white">
       <div className="section-container">
-        <div className="reveal mb-10 max-w-3xl">
-          <h2 className="section-title">{section.title}</h2>
+        <div className="reveal mb-10 w-full">
+          <h2 className="section-title whitespace-nowrap overflow-visible text-2xl sm:text-4xl lg:text-5xl">{section.title}</h2>
         </div>
 
         <div className="border-t border-line" role="list">

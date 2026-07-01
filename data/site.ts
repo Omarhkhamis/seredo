@@ -167,7 +167,7 @@ export const defaultSiteContent = {
   ecosystemSection: {
     title: "منظومة أعمال عقارية متكاملة",
     description:
-      "لا يقتصر سيريدو على كونه مساحة لعرض المشاريع العقارية، بل يمثل بيئة متخصصة تجمع بين الاستثمار، المعرفة، العلاقات المهنية، وفرص النمو التجاري.",
+      "لا يقتصر سيريدو على كونه مساحة لعرض المشاريع العقارية، بل يمثل بيئة متخصصة تجمع بين الاستثمار، المعرفة، العلاقات المهنية، وفرص النمو التجاري، ضمن تجربة مصممة لتخدم مختلف الفئات العاملة في القطاع العقاري.",
     imageAlt: "لقاء مهني يعبر عن منظومة الأعمال والشراكات في سيريدو",
     cards: [
       {
@@ -203,7 +203,7 @@ export const defaultSiteContent = {
     ],
   },
   statsSection: {
-    eyebrow: "سيريدو بالأرقام",
+    eyebrow: "",
     title: "الدورة الخامسة، امتداد لمسيرة متصاعدة",
     items: [
       { value: 5, label: "دورات من الحضور المتنامي والتوسع المستمر", suffix: "", decimals: 0 },
@@ -246,40 +246,72 @@ export const defaultSiteContent = {
     ],
   },
   partnersSection: {
-    eyebrow: "شركاء النجاح",
+    eyebrow: "",
     title: "شركاء الدورات السابقة",
     description:
       "جهات ساهمت في تعزيز حضور سيريدو عبر دوراته السابقة، ضمن منظومة تجمع الجهات الحكومية، التمويلية، العارضين، والشركاء الإعلاميين.",
     groups: {
       government: {
         title: "جهات حكومية",
-        countLabel: "3 جهات",
+        countLabel: "8 جهات",
         items: [
           {
             name: "وزارة البلديات والإسكان",
-            logo: "/assets/seredo/government-momah.png",
-          },
-          {
-            name: "الهيئة العامة للعقار",
-            logo: "/assets/seredo/government-rega.png",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/MINISTRY-OF-HOUSING_6-scaled-e1781591519236.jpg",
           },
           {
             name: "NHC",
-            logo: "/assets/seredo/government-nhc.png",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/NHC_Logo_NTLGreen_H_RGB.png",
+          },
+          {
+            name: "جهة حكومية",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/Untitled-22-يونيو-2026-في-12.10.44.png",
+          },
+          {
+            name: "غرفة جدة",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/شعار-غرفة-جدة__page-0001-scaled-e1781591478427.jpg",
+          },
+          {
+            name: "أمانة جدة",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/Jeddah-Municipality-Logo_page-0001-scaled-e1781591459845.jpg",
+          },
+          {
+            name: "الهيئة العامة للعقار",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/REGA-LOGO_page-0001-scaled.jpg",
+          },
+          {
+            name: "جهة حكومية",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/60409-e1781591431483.jpg",
+          },
+          {
+            name: "غرفة مكة",
+            logo: "https://seredoexpo.sa/wp-content/uploads/2026/06/MAKKAH-CHAMBER-OF-COMMERCE-LOGO.png",
           },
         ],
       },
       finance: {
         title: "البنوك وشركات التمويل",
-        countLabel: "جهات تمويلية",
+        countLabel: "5 جهات",
         items: [
           {
-            name: "صندوق التنمية العقارية",
-            logo: "/assets/seredo/finance-redf.png",
+            name: "بنك البلاد",
+            logo: "/assets/seredo/finance-bank-albilad.png",
           },
           {
-            name: "SHL Finance Company",
-            logo: "/assets/seredo/finance-shl.jpg",
+            name: "البنك السعودي للاستثمار",
+            logo: "/assets/seredo/finance-saib.png",
+          },
+          {
+            name: "البنك الأهلي السعودي",
+            logo: "/assets/seredo/finance-snb.png",
+          },
+          {
+            name: "البنك العربي الوطني",
+            logo: "/assets/seredo/finance-anb.png",
+          },
+          {
+            name: "مصرف الإنماء",
+            logo: "/assets/seredo/finance-alinma.png",
           },
         ],
       },
