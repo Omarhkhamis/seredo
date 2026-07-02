@@ -2,6 +2,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { AboutSection } from "@/components/sections/AboutSection";
 import { AudienceSection } from "@/components/sections/AudienceSection";
+import { ConstructionServicesSection } from "@/components/sections/ConstructionServicesSection";
 import { DeepAboutSection } from "@/components/sections/DeepAboutSection";
 import { EcosystemSection } from "@/components/sections/EcosystemSection";
 import { EventInfoSection } from "@/components/sections/EventInfoSection";
@@ -34,6 +35,7 @@ export default async function Home() {
         <StatsSection site={site} />
         <AudienceSection site={site} />
         <SectorsSection site={site} />
+        <ConstructionServicesSection site={site} />
         <PartnersSection site={site} />
         <FinalCtaSection site={site} />
       </main>

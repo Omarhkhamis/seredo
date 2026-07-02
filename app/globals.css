@@ -207,6 +207,11 @@
     animation-duration: 44s;
   }
 
+  .fifth-cycle-marquee .marquee-track {
+    animation-duration: 44s;
+    animation-direction: reverse;
+  }
+
   .marquee-group {
     display: flex;
     flex: 0 0 auto;
@@ -223,9 +228,36 @@
     width: clamp(190px, 42vw, 230px);
   }
 
+  .fifth-cycle-logo-cell {
+    width: clamp(190px, 42vw, 230px);
+  }
+
   @media (min-width: 1024px) {
-    .government-logo-cell {
+    .government-logo-cell,
+    .fifth-cycle-logo-cell {
       width: calc((1240px - 56px) / 5);
+    }
+  }
+
+  .seredo-partners-section {
+    width: 100%;
+    overflow: hidden;
+    background: #f7f9fc;
+    padding: 40px 0;
+    font-family: "IBM Plex Sans Arabic", sans-serif;
+  }
+
+  .seredo-title {
+    margin-bottom: 25px;
+    color: #25396e;
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .seredo-title {
+      font-size: 22px;
     }
   }
 

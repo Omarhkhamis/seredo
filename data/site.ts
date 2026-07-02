@@ -245,6 +245,23 @@ export const defaultSiteContent = {
       "خدمات البناء والتطوير",
     ],
   },
+  constructionServicesSection: {
+    title: "شركاء الدورة الخامسة",
+    description:
+      "جهات متخصصة في خدمات البناء والتطوير العقاري ضمن منظومة سيريدو، تقدم حلولاً داعمة للمشاريع والفرص العقارية.",
+    items: [
+      { name: "Ambatt Real Estate", logo: "/assets/seredo/5/construction-01.webp" },
+      { name: "ARACO", logo: "/assets/seredo/5/construction-02.webp" },
+      { name: "Pan Kingdom", logo: "/assets/seredo/5/construction-03.webp" },
+      { name: "HOV Global", logo: "/assets/seredo/5/construction-04.webp" },
+      { name: "EG", logo: "/assets/seredo/5/construction-05.webp" },
+      { name: "أملاك", logo: "/assets/seredo/5/construction-06.webp" },
+      { name: "NHC", logo: "/assets/seredo/5/construction-07.webp" },
+      { name: "جهة تطوير", logo: "/assets/seredo/5/construction-08.webp" },
+      { name: "راسيات", logo: "/assets/seredo/5/construction-09.webp" },
+      { name: "مكيون", logo: "/assets/seredo/5/construction-10.webp" },
+    ],
+  },
   partnersSection: {
     eyebrow: "",
     title: "شركاء الدورات السابقة",
