@@ -5,6 +5,32 @@ const { Pool } = require("pg");
 const contentId = "main";
 const assetsRoot = path.join(process.cwd(), "public", "assets", "seredo");
 const publicPath = (relative) => `/assets/seredo/${relative}`;
+const loadDotEnv = () => {
+  const envPath = path.join(process.cwd(), ".env");
+
+  if (!fs.existsSync(envPath)) {
+    return;
+  }
+
+  for (const line of fs.readFileSync(envPath, "utf8").split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+
+    if (!match || process.env[match[1]] !== undefined) {
+      continue;
+    }
+
+    let value = match[2].trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[match[1]] = value;
+  }
+};
 const assertExists = (relative) => {
   if (!fs.existsSync(path.join(assetsRoot, relative))) {
     throw new Error(`Missing asset: ${relative}`);
@@ -47,6 +73,19 @@ const media = [
   ["نهدي العقارية", "media-nahdi.webp"],
 ].map(([name, logo]) => ({ name, logo: assertExists(logo) }));
 
+const fifthCyclePartners = [
+  ["Ambatt Real Estate", "5/construction-01.webp"],
+  ["ARACO", "5/construction-02.webp"],
+  ["Pan Kingdom", "5/construction-03.webp"],
+  ["HOV Global", "5/construction-04.webp"],
+  ["EG", "5/construction-05.webp"],
+  ["أملاك", "5/construction-06.webp"],
+  ["NHC", "5/construction-07.webp"],
+  ["جهة تطوير", "5/construction-08.webp"],
+  ["راسيات", "5/construction-09.webp"],
+  ["مكيون", "5/construction-10.webp"],
+].map(([name, logo]) => ({ name, logo: assertExists(logo) }));
+
 const injected = {
   assets: {
     logo: assertExists("seredo-logo.webp"),
@@ -55,6 +94,12 @@ const injected = {
     networkImage: assertExists("network-city.webp"),
     venueLogo: assertExists("jeddah-superdome.webp"),
     organizerLogo: assertExists("organizer-logo.webp"),
+  },
+  constructionServicesSection: {
+    title: "شركاء الدورة الخامسة",
+    description:
+      "جهات متخصصة في خدمات البناء والتطوير العقاري ضمن منظومة سيريدو، تقدم حلولاً داعمة للمشاريع والفرص العقارية.",
+    items: fifthCyclePartners,
   },
   partnersSection: {
     eyebrow: "",
@@ -73,11 +118,18 @@ const injected = {
 function mergeContent(current) {
   const next = current && typeof current === "object" && !Array.isArray(current) ? { ...current } : {};
   next.assets = { ...(next.assets || {}), ...injected.assets };
+  next.constructionServicesSection = injected.constructionServicesSection;
   next.partnersSection = injected.partnersSection;
   return next;
 }
 
 async function main() {
+  loadDotEnv();
+
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not configured. Add it to .env before running this script.");
+  }
+
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: process.env.POSTGRES_SSL === "true" ? { rejectUnauthorized: false } : undefined,
@@ -108,7 +160,13 @@ async function main() {
 
     console.log(
       JSON.stringify(
-        { government: government.length, finance: finance.length, exhibitors: exhibitors.length, media: media.length },
+        {
+          fifthCyclePartners: fifthCyclePartners.length,
+          government: government.length,
+          finance: finance.length,
+          exhibitors: exhibitors.length,
+          media: media.length,
+        },
         null,
         2,
       ),

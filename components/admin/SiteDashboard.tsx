@@ -1338,6 +1338,31 @@ export function SiteDashboard({
     </div>
   );
 
+  const renderFifthCyclePartnersEditor = () => (
+    <div className="grid gap-4">
+      <EditorCard title="شركاء الدورة الخامسة">
+        {renderFields(
+          ["constructionServicesSection"],
+          [
+            { key: "title", label: "العنوان" },
+            { key: "description", label: "الوصف", type: "textarea" },
+          ],
+          "md:grid-cols-1",
+        )}
+      </EditorCard>
+      {renderObjectList(
+        "شعارات شركاء الدورة الخامسة",
+        ["constructionServicesSection", "items"],
+        [
+          { key: "name", label: "اسم الجهة" },
+          { key: "logo", label: "الشعار", type: "image" },
+        ],
+        () => ({ name: "", logo: "" }),
+        "إضافة شعار",
+      )}
+    </div>
+  );
+
   const renderSocialLinksEditor = () => {
     const socialLinks = normalizeSocialLinks(getValue<SocialLink[]>(["socialLinks"], []));
     const usedPlatforms = new Set(socialLinks.map((link) => link.label));
@@ -2196,6 +2221,7 @@ export function SiteDashboard({
       case "partners":
         return (
           <div className="grid gap-5">
+            {renderFifthCyclePartnersEditor()}
             <EditorCard title="الشركاء">
               {renderFields(
                 ["partnersSection"],

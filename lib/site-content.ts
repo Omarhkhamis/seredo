@@ -31,6 +31,7 @@ const editableContentPaths: ContentPath[] = [
   ["hero", "imageAlt"],
   ["hero", "figureTitle"],
   ["hero", "figureDescription"],
+  ["constructionServicesSection"],
   ["partnersSection"],
   ["footer"],
 ];
