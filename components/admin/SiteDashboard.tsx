@@ -53,6 +53,7 @@ import {
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Swal from "sweetalert2";
 import { type SiteContent } from "@/data/site";
+import { RegistrationsSection } from "@/components/admin/RegistrationsSection";
 import { cn } from "@/components/ui/cn";
 
 type PathPart = string | number;
@@ -70,20 +71,41 @@ type SiteDashboardProps = {
   initialContent: SiteContent;
   currentAdmin: CurrentAdmin;
   initialAdmins: AdminUser[];
+  initialGateStaff: GateStaff[];
 };
 
 type DraftRecord = Record<string, unknown>;
+type AdminRole = "admin" | "event_manager";
 type AdminUser = {
   id: string;
   email: string;
+  role: AdminRole;
   createdAt: string;
   updatedAt: string;
 };
 type CurrentAdmin = {
   id: string;
   email: string;
+  role: AdminRole;
 };
-type AdminDrafts = Record<string, { email: string; password: string }>;
+type AdminDrafts = Record<string, { email: string; password: string; role: AdminRole }>;
+type GateStaff = {
+  id: string;
+  name: string;
+  pin: string;
+  createdAt: string;
+  updatedAt: string;
+};
+type GateStaffDrafts = Record<string, { name: string; pin: string }>;
+
+const adminRoleOptions: Array<{ label: string; value: AdminRole }> = [
+  { label: "مدير عام", value: "admin" },
+  { label: "مدير إيفنت", value: "event_manager" },
+];
+
+function adminRoleLabel(role: AdminRole) {
+  return role === "event_manager" ? "مدير إيفنت" : "مدير عام";
+}
 type GalleryImage = {
   src: string;
   name: string;
@@ -99,6 +121,9 @@ type GalleryTarget = {
 } | null;
 
 const sections = [
+  { id: "registrations-visitors", label: "الزائرين", icon: UsersRound },
+  { id: "registrations-exhibitors", label: "العارضين", icon: Store },
+  { id: "gate-staff", label: "موظفي البوابة", icon: IdCard },
   { id: "general", label: "إعدادات عامة", icon: Settings },
   { id: "gallery", label: "المعرض", icon: ImagePlus },
   { id: "hero", label: "فيديو الهيرو", icon: Video },
@@ -116,6 +141,12 @@ const dashboardGroups: Array<{
   icon: LucideIcon;
   sectionIds: SectionId[];
 }> = [
+  {
+    id: "main",
+    label: "التسجيلات",
+    icon: ListChecks,
+    sectionIds: ["registrations-visitors", "registrations-exhibitors", "gate-staff"],
+  },
   {
     id: "settings",
     label: "الإعدادات العامة",
@@ -251,7 +282,18 @@ type SocialPlatform = (typeof socialPlatforms)[number];
 type SocialLink = SiteContent["socialLinks"][number];
 
 function buildAdminDrafts(admins: AdminUser[]): AdminDrafts {
-  return Object.fromEntries(admins.map((admin) => [admin.id, { email: admin.email, password: "" }]));
+  return Object.fromEntries(
+    admins.map((admin) => [admin.id, { email: admin.email, password: "", role: admin.role }]),
+  );
+}
+
+function buildGateStaffDrafts(gateStaff: GateStaff[]): GateStaffDrafts {
+  return Object.fromEntries(
+    gateStaff.map((staffMember) => [
+      staffMember.id,
+      { name: staffMember.name, pin: staffMember.pin },
+    ]),
+  );
 }
 
 function clone<T>(value: T): T {
@@ -751,10 +793,11 @@ export function SiteDashboard({
   initialContent,
   currentAdmin,
   initialAdmins,
+  initialGateStaff,
 }: SiteDashboardProps) {
   const [draft, setDraft] = useState<SiteContent>(() => clone(initialContent));
   const [lastSaved, setLastSaved] = useState<SiteContent>(() => clone(initialContent));
-  const [activeSection, setActiveSection] = useState<SectionId>("hero");
+  const [activeSection, setActiveSection] = useState<SectionId>("registrations-visitors");
   const [openGroups, setOpenGroups] = useState<Record<DashboardGroupId, boolean>>({
     main: true,
     pages: false,
@@ -771,7 +814,23 @@ export function SiteDashboard({
   const [adminMessage, setAdminMessage] = useState("يمكن تعديل البريد أو تعيين كلمة سر جديدة لأي مدير.");
   const [adminMessageType, setAdminMessageType] = useState<"idle" | "success" | "error">("idle");
   const [isAdminSaving, setIsAdminSaving] = useState(false);
+  const [newAdminRole, setNewAdminRole] = useState<AdminRole>("admin");
+  const [gateStaff, setGateStaff] = useState<GateStaff[]>(() => clone(initialGateStaff));
+  const [gateStaffDrafts, setGateStaffDrafts] = useState<GateStaffDrafts>(() =>
+    buildGateStaffDrafts(initialGateStaff),
+  );
+  const [newGateStaffName, setNewGateStaffName] = useState("");
+  const [newGateStaffPin, setNewGateStaffPin] = useState("");
+  const [gateStaffMessage, setGateStaffMessage] = useState("يمكن إضافة موظفي البوابة وتغيير رموز الدخول.");
+  const [gateStaffMessageType, setGateStaffMessageType] = useState<"idle" | "success" | "error">("idle");
+  const [isGateStaffSaving, setIsGateStaffSaving] = useState(false);
   const [socialPlatformToAdd, setSocialPlatformToAdd] = useState<string>(socialPlatforms[0].label);
+
+  // مدير الإيفنت يستعرض التسجيلات ويدير موظفي البوابة بدون تعديل محتوى الموقع.
+  const canEditSite = currentAdmin.role !== "event_manager";
+  const visibleGroups = canEditSite
+    ? dashboardGroups
+    : dashboardGroups.filter((group) => group.id === "main");
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryTarget, setGalleryTarget] = useState<GalleryTarget>(null);
@@ -1230,7 +1289,7 @@ export function SiteDashboard({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword }),
+        body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword, role: newAdminRole }),
       });
       const payload = (await response.json()) as { admins?: AdminUser[]; message?: string };
 
@@ -1247,6 +1306,7 @@ export function SiteDashboard({
       setAdminDrafts(buildAdminDrafts(payload.admins));
       setNewAdminEmail("");
       setNewAdminPassword("");
+      setNewAdminRole("admin");
       setAdminMessage(payload.message ?? "تمت إضافة المدير.");
       setAdminMessageType("success");
       showSaveToast(payload.message ?? "تمت إضافة المدير");
@@ -1278,6 +1338,7 @@ export function SiteDashboard({
         body: JSON.stringify({
           email: adminDraft.email,
           password: adminDraft.password || undefined,
+          role: adminDraft.role,
         }),
       });
       const payload = (await response.json()) as { admin?: AdminUser; admins?: AdminUser[]; message?: string };
@@ -1306,6 +1367,159 @@ export function SiteDashboard({
       setAdminMessageType("error");
     } finally {
       setIsAdminSaving(false);
+    }
+  };
+
+  const refreshGateStaff = async () => {
+    setIsGateStaffSaving(true);
+    setGateStaffMessage("جاري تحميل موظفي البوابة...");
+    setGateStaffMessageType("idle");
+
+    try {
+      const response = await fetch("/api/admin/gate-staff", { cache: "no-store" });
+      const payload = (await response.json()) as { gateStaff?: GateStaff[]; message?: string };
+
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!response.ok || !payload.gateStaff) {
+        throw new Error(payload.message ?? "تعذر تحميل موظفي البوابة.");
+      }
+
+      setGateStaff(payload.gateStaff);
+      setGateStaffDrafts(buildGateStaffDrafts(payload.gateStaff));
+      setGateStaffMessage("تم تحميل موظفي البوابة.");
+      setGateStaffMessageType("success");
+    } catch (error) {
+      setGateStaffMessage(error instanceof Error ? error.message : "تعذر تحميل موظفي البوابة.");
+      setGateStaffMessageType("error");
+    } finally {
+      setIsGateStaffSaving(false);
+    }
+  };
+
+  const createGateStaffMember = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsGateStaffSaving(true);
+    setGateStaffMessage("جاري إضافة موظف البوابة...");
+    setGateStaffMessageType("idle");
+
+    try {
+      const response = await fetch("/api/admin/gate-staff", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: newGateStaffName, pin: newGateStaffPin }),
+      });
+      const payload = (await response.json()) as { gateStaff?: GateStaff[]; message?: string };
+
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!response.ok || !payload.gateStaff) {
+        throw new Error(payload.message ?? "تعذرت إضافة موظف البوابة.");
+      }
+
+      setGateStaff(payload.gateStaff);
+      setGateStaffDrafts(buildGateStaffDrafts(payload.gateStaff));
+      setNewGateStaffName("");
+      setNewGateStaffPin("");
+      setGateStaffMessage(payload.message ?? "تمت إضافة موظف البوابة.");
+      setGateStaffMessageType("success");
+      showSaveToast(payload.message ?? "تمت إضافة موظف البوابة");
+    } catch (error) {
+      setGateStaffMessage(error instanceof Error ? error.message : "تعذرت إضافة موظف البوابة.");
+      setGateStaffMessageType("error");
+    } finally {
+      setIsGateStaffSaving(false);
+    }
+  };
+
+  const updateGateStaffMember = async (staffId: string) => {
+    const staffDraft = gateStaffDrafts[staffId];
+
+    if (!staffDraft) {
+      return;
+    }
+
+    setIsGateStaffSaving(true);
+    setGateStaffMessage("جاري تحديث موظف البوابة...");
+    setGateStaffMessageType("idle");
+
+    try {
+      const response = await fetch(`/api/admin/gate-staff/${staffId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: staffDraft.name,
+          pin: staffDraft.pin,
+        }),
+      });
+      const payload = (await response.json()) as { gateStaff?: GateStaff[]; message?: string };
+
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!response.ok || !payload.gateStaff) {
+        throw new Error(payload.message ?? "تعذر تحديث موظف البوابة.");
+      }
+
+      setGateStaff(payload.gateStaff);
+      setGateStaffDrafts(buildGateStaffDrafts(payload.gateStaff));
+      setGateStaffMessage(payload.message ?? "تم تحديث موظف البوابة.");
+      setGateStaffMessageType("success");
+      showSaveToast(payload.message ?? "تم حفظ بيانات موظف البوابة");
+    } catch (error) {
+      setGateStaffMessage(error instanceof Error ? error.message : "تعذر تحديث موظف البوابة.");
+      setGateStaffMessageType("error");
+    } finally {
+      setIsGateStaffSaving(false);
+    }
+  };
+
+  const deleteGateStaffMember = async (staffId: string) => {
+    if (!(await confirmDelete("تأكيد حذف موظف البوابة"))) {
+      return;
+    }
+
+    setIsGateStaffSaving(true);
+    setGateStaffMessage("جاري حذف موظف البوابة...");
+    setGateStaffMessageType("idle");
+
+    try {
+      const response = await fetch(`/api/admin/gate-staff/${staffId}`, {
+        method: "DELETE",
+      });
+      const payload = (await response.json()) as { gateStaff?: GateStaff[]; message?: string };
+
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!response.ok || !payload.gateStaff) {
+        throw new Error(payload.message ?? "تعذر حذف موظف البوابة.");
+      }
+
+      setGateStaff(payload.gateStaff);
+      setGateStaffDrafts(buildGateStaffDrafts(payload.gateStaff));
+      setGateStaffMessage(payload.message ?? "تم حذف موظف البوابة.");
+      setGateStaffMessageType("success");
+      showSaveToast(payload.message ?? "تم حذف موظف البوابة");
+    } catch (error) {
+      setGateStaffMessage(error instanceof Error ? error.message : "تعذر حذف موظف البوابة.");
+      setGateStaffMessageType("error");
+    } finally {
+      setIsGateStaffSaving(false);
     }
   };
 
@@ -1781,8 +1995,179 @@ export function SiteDashboard({
     );
   };
 
+  const renderGateStaffManager = () => (
+    <div className="grid gap-5">
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-bold",
+          gateStaffMessageType === "success" && "border-emerald-200 bg-emerald-50 text-emerald-800",
+          gateStaffMessageType === "error" && "border-red-200 bg-red-50 text-red-700",
+          gateStaffMessageType === "idle" && "border-line bg-white text-muted",
+        )}
+      >
+        {gateStaffMessageType === "success" ? (
+          <CheckCircle2 size={18} aria-hidden="true" />
+        ) : gateStaffMessageType === "error" ? (
+          <AlertCircle size={18} aria-hidden="true" />
+        ) : (
+          <Info size={18} aria-hidden="true" />
+        )}
+        <span>{gateStaffMessage}</span>
+      </div>
+
+      <EditorCard title="إضافة موظف بوابة">
+        <form onSubmit={createGateStaffMember} className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+          <DashboardField
+            label="اسم الموظف"
+            value={newGateStaffName}
+            onChange={(value) => setNewGateStaffName(String(value))}
+          />
+          <DashboardField
+            label="رمز الدخول"
+            type="password"
+            value={newGateStaffPin}
+            onChange={(value) => setNewGateStaffPin(String(value))}
+          />
+          <button
+            type="submit"
+            disabled={isGateStaffSaving}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-brand-600 px-5 py-2 text-sm font-extrabold text-white shadow-soft transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGateStaffSaving ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}
+            إضافة
+          </button>
+        </form>
+      </EditorCard>
+
+      <EditorCard
+        title="موظفو البوابة الحاليون"
+        action={
+          <button
+            type="button"
+            onClick={refreshGateStaff}
+            disabled={isGateStaffSaving}
+            className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-4 py-2 text-sm font-extrabold text-ink transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGateStaffSaving ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={16} aria-hidden="true" />}
+            تحديث
+          </button>
+        }
+      >
+        {gateStaff.length > 0 ? (
+          <div className="grid gap-4">
+            {gateStaff.map((staffMember) => {
+              const staffDraft =
+                gateStaffDrafts[staffMember.id] ?? { name: staffMember.name, pin: staffMember.pin };
+
+              return (
+                <article className="rounded-lg border border-line bg-surface p-4" key={staffMember.id}>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg text-brand-800">{staffMember.name}</h3>
+                      <p className="text-xs font-bold text-muted">
+                        آخر تحديث: {new Date(staffMember.updatedAt).toLocaleString("ar-SA")}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-black text-brand-700">
+                      <IdCard size={14} aria-hidden="true" />
+                      موظف بوابة
+                    </span>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
+                    <DashboardField
+                      label="اسم الموظف"
+                      value={staffDraft.name}
+                      onChange={(value) =>
+                        setGateStaffDrafts((current) => ({
+                          ...current,
+                          [staffMember.id]: {
+                            ...staffDraft,
+                            name: String(value),
+                          },
+                        }))
+                      }
+                    />
+                    <DashboardField
+                      label="رمز الدخول"
+                      type="password"
+                      value={staffDraft.pin}
+                      onChange={(value) =>
+                        setGateStaffDrafts((current) => ({
+                          ...current,
+                          [staffMember.id]: {
+                            ...staffDraft,
+                            pin: String(value),
+                          },
+                        }))
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateGateStaffMember(staffMember.id)}
+                      disabled={isGateStaffSaving}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-brand-600 px-5 py-2 text-sm font-extrabold text-white shadow-soft transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isGateStaffSaving ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <Save size={17} aria-hidden="true" />}
+                      حفظ
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteGateStaffMember(staffMember.id)}
+                      disabled={isGateStaffSaving}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-red-200 bg-white px-5 py-2 text-sm font-extrabold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Trash2 size={17} aria-hidden="true" />
+                      حذف
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-line bg-surface p-6 text-center text-sm font-bold text-muted">
+            لا يوجد موظفو بوابة حتى الآن.
+          </div>
+        )}
+      </EditorCard>
+    </div>
+  );
+
   const activeContent = () => {
+    if (
+      !canEditSite &&
+      activeSection !== "registrations-visitors" &&
+      activeSection !== "registrations-exhibitors" &&
+      activeSection !== "gate-staff"
+    ) {
+      return null;
+    }
+
     switch (activeSection) {
+      case "registrations-visitors":
+        return (
+          <RegistrationsSection
+            key="visitor"
+            type="visitor"
+            canImport={canEditSite}
+            onUnauthorized={redirectToLogin}
+          />
+        );
+
+      case "registrations-exhibitors":
+        return (
+          <RegistrationsSection
+            key="exhibitor"
+            type="exhibitor"
+            canImport={canEditSite}
+            onUnauthorized={redirectToLogin}
+          />
+        );
+
+      case "gate-staff":
+        return renderGateStaffManager();
+
       case "general":
         return (
           <div className="grid gap-5">
@@ -2349,7 +2734,7 @@ export function SiteDashboard({
             </div>
 
             <EditorCard title="إضافة مدير جديد">
-              <form onSubmit={createAdmin} className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+              <form onSubmit={createAdmin} className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
                 <DashboardField
                   label="البريد الإلكتروني"
                   type="text"
@@ -2362,6 +2747,13 @@ export function SiteDashboard({
                   value={newAdminPassword}
                   onChange={(value) => setNewAdminPassword(String(value))}
                 />
+                <DashboardField
+                  label="الصلاحية"
+                  type="select"
+                  options={adminRoleOptions}
+                  value={newAdminRole}
+                  onChange={(value) => setNewAdminRole(value === "event_manager" ? "event_manager" : "admin")}
+                />
                 <button
                   type="submit"
                   disabled={isAdminSaving}
@@ -2371,6 +2763,9 @@ export function SiteDashboard({
                   إضافة
                 </button>
               </form>
+              <p className="mt-3 text-xs font-bold leading-6 text-muted">
+                مدير الإيفنت يستعرض التسجيلات ويدير موظفي البوابة، ولا يمكنه تعديل محتوى الموقع أو إدارة المدراء.
+              </p>
             </EditorCard>
 
             <EditorCard
@@ -2389,7 +2784,8 @@ export function SiteDashboard({
             >
               <div className="grid gap-4">
                 {admins.map((admin) => {
-                  const adminDraft = adminDrafts[admin.id] ?? { email: admin.email, password: "" };
+                  const adminDraft =
+                    adminDrafts[admin.id] ?? { email: admin.email, password: "", role: admin.role };
                   const isCurrentAdmin = admin.id === currentAdmin.id;
 
                   return (
@@ -2401,14 +2797,26 @@ export function SiteDashboard({
                             آخر تحديث: {new Date(admin.updatedAt).toLocaleString("ar-SA")}
                           </p>
                         </div>
-                        {isCurrentAdmin ? (
-                          <span className="rounded-full bg-brand-600 px-3 py-1 text-xs font-black text-white">
-                            حسابك الحالي
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={cn(
+                              "rounded-full px-3 py-1 text-xs font-black",
+                              admin.role === "event_manager"
+                                ? "bg-copper-500/15 text-copper-500"
+                                : "bg-brand-50 text-brand-700",
+                            )}
+                          >
+                            {adminRoleLabel(admin.role)}
                           </span>
-                        ) : null}
+                          {isCurrentAdmin ? (
+                            <span className="rounded-full bg-brand-600 px-3 py-1 text-xs font-black text-white">
+                              حسابك الحالي
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
 
-                      <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                      <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
                         <DashboardField
                           label="البريد الإلكتروني"
                           value={adminDraft.email}
@@ -2432,6 +2840,21 @@ export function SiteDashboard({
                               [admin.id]: {
                                 ...adminDraft,
                                 password: String(value),
+                              },
+                            }))
+                          }
+                        />
+                        <DashboardField
+                          label="الصلاحية"
+                          type="select"
+                          options={adminRoleOptions}
+                          value={adminDraft.role}
+                          onChange={(value) =>
+                            setAdminDrafts((current) => ({
+                              ...current,
+                              [admin.id]: {
+                                ...adminDraft,
+                                role: value === "event_manager" ? "event_manager" : "admin",
                               },
                             }))
                           }
@@ -2471,6 +2894,9 @@ export function SiteDashboard({
             <span className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-white px-4 py-2 text-sm font-extrabold text-ink">
               <ShieldCheck size={17} className="text-brand-600" aria-hidden="true" />
               {currentAdminEmail}
+              <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-black text-brand-700">
+                {adminRoleLabel(currentAdmin.role)}
+              </span>
             </span>
             <a
               href="/"
@@ -2481,15 +2907,17 @@ export function SiteDashboard({
               <Eye size={17} aria-hidden="true" />
               معاينة
             </a>
-            <button
-              type="button"
-              onClick={saveContent}
-              disabled={isSaving}
-              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand-600 px-5 py-2 text-sm font-extrabold text-white shadow-soft transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSaving ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <Save size={17} aria-hidden="true" />}
-              حفظ
-            </button>
+            {canEditSite ? (
+              <button
+                type="button"
+                onClick={saveContent}
+                disabled={isSaving}
+                className="inline-flex min-h-11 items-center gap-2 rounded-md bg-brand-600 px-5 py-2 text-sm font-extrabold text-white shadow-soft transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSaving ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <Save size={17} aria-hidden="true" />}
+                حفظ
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={logout}
@@ -2506,7 +2934,7 @@ export function SiteDashboard({
         <aside className="w-full shrink-0 lg:sticky lg:top-5 lg:w-72">
           <nav className="rounded-lg border border-line bg-white p-2 shadow-soft" aria-label="أقسام الداشبورد">
             <div className="grid gap-2">
-              {dashboardGroups.map((group) => {
+              {visibleGroups.map((group) => {
                 const GroupIcon = group.icon;
                 const isOpen = openGroups[group.id];
                 const groupHasActiveSection = group.sectionIds.includes(activeSection);
@@ -2564,24 +2992,26 @@ export function SiteDashboard({
         </aside>
 
         <main className="min-w-0 flex-1">
-          <div
-            className={cn(
-              "mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-bold",
-              messageType === "success" && "border-emerald-200 bg-emerald-50 text-emerald-800",
-              messageType === "error" && "border-red-200 bg-red-50 text-red-700",
-              messageType === "idle" && "border-line bg-white text-muted",
-            )}
-          >
-            {messageType === "success" ? (
-              <CheckCircle2 size={18} aria-hidden="true" />
-            ) : messageType === "error" ? (
-              <AlertCircle size={18} aria-hidden="true" />
-            ) : (
-              <Info size={18} aria-hidden="true" />
-            )}
-            <span>{message}</span>
-            {isDirty ? <span className="me-auto rounded-full bg-copper-500 px-3 py-1 text-xs font-black text-white">تعديلات غير محفوظة</span> : null}
-          </div>
+          {canEditSite ? (
+            <div
+              className={cn(
+                "mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-bold",
+                messageType === "success" && "border-emerald-200 bg-emerald-50 text-emerald-800",
+                messageType === "error" && "border-red-200 bg-red-50 text-red-700",
+                messageType === "idle" && "border-line bg-white text-muted",
+              )}
+            >
+              {messageType === "success" ? (
+                <CheckCircle2 size={18} aria-hidden="true" />
+              ) : messageType === "error" ? (
+                <AlertCircle size={18} aria-hidden="true" />
+              ) : (
+                <Info size={18} aria-hidden="true" />
+              )}
+              <span>{message}</span>
+              {isDirty ? <span className="me-auto rounded-full bg-copper-500 px-3 py-1 text-xs font-black text-white">تعديلات غير محفوظة</span> : null}
+            </div>
+          ) : null}
 
           {activeContent()}
         </main>

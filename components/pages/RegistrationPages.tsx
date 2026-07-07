@@ -31,7 +31,7 @@ export function VisitorsRegistrationPage({ site }: RegistrationPagesProps) {
         </div>
 
         <div className="form-side">
-          <RegistrationForm type="visitor" />
+          <RegistrationForm type="visitor" logoSrc={site.assets.logo} />
         </div>
       </div>
     </section>
@@ -48,7 +48,7 @@ export function ExhibitorsRegistrationPage({ site }: RegistrationPagesProps) {
       </div>
 
       <div className="form-wrap">
-        <RegistrationForm type="exhibitor" />
+        <RegistrationForm type="exhibitor" logoSrc={site.assets.logo} />
       </div>
     </section>
   );

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import {
   getCurrentAdminFromRequest,
+  isFullAdmin,
   listAdminUsers,
+  normalizeAdminRole,
   updateAdminUser,
 } from "@/lib/admin-auth";
 
@@ -19,10 +21,19 @@ export async function PATCH(
     return NextResponse.json({ message: "يجب تسجيل الدخول أولاً." }, { status: 401 });
   }
 
+  if (!isFullAdmin(admin)) {
+    return NextResponse.json({ message: "لا تملك صلاحية إدارة المدراء." }, { status: 403 });
+  }
+
   try {
     const { id } = await context.params;
-    const body = (await request.json()) as { email?: string; password?: string };
-    const updatedAdmin = await updateAdminUser(id, body.email ?? "", body.password || undefined);
+    const body = (await request.json()) as { email?: string; password?: string; role?: string };
+    const updatedAdmin = await updateAdminUser(
+      id,
+      body.email ?? "",
+      body.password || undefined,
+      body.role === undefined ? undefined : normalizeAdminRole(body.role),
+    );
     const admins = await listAdminUsers();
 
     return NextResponse.json({

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { getCurrentAdminFromRequest } from "@/lib/admin-auth";
+import { getCurrentAdminFromRequest, isFullAdmin } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -125,11 +125,8 @@ async function listImagesFromDirectory(
 async function requireAdmin(request: Request) {
   const admin = await getCurrentAdminFromRequest(request);
 
-  if (!admin) {
-    return false;
-  }
-
-  return true;
+  // المعرض متاح للمدير العام فقط، مدير الإيفنت يستعرض التسجيلات فقط.
+  return isFullAdmin(admin);
 }
 
 export async function GET(request: Request) {

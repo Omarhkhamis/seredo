@@ -16,9 +16,12 @@ declare global {
   var seredoAuthTablesReady: Promise<void> | undefined;
 }
 
+export type AdminRole = "admin" | "event_manager";
+
 type AdminUserRow = {
   id: string;
   email: string;
+  role: string;
   created_at: Date;
   updated_at: Date;
 };
@@ -26,6 +29,7 @@ type AdminUserRow = {
 type SessionRow = {
   id: string;
   email: string;
+  role: string;
   created_at: Date;
   updated_at: Date;
 };
@@ -33,6 +37,7 @@ type SessionRow = {
 export type AdminUser = {
   id: string;
   email: string;
+  role: AdminRole;
   createdAt: string;
   updatedAt: string;
 };
@@ -40,7 +45,16 @@ export type AdminUser = {
 export type CurrentAdmin = {
   id: string;
   email: string;
+  role: AdminRole;
 };
+
+export function normalizeAdminRole(value: unknown): AdminRole {
+  return value === "event_manager" ? "event_manager" : "admin";
+}
+
+export function isFullAdmin(admin: CurrentAdmin | null) {
+  return Boolean(admin && admin.role === "admin");
+}
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -74,6 +88,7 @@ function mapAdmin(row: AdminUserRow): AdminUser {
   return {
     id: row.id,
     email: row.email,
+    role: normalizeAdminRole(row.role),
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
   };
@@ -122,6 +137,11 @@ async function ensureAdminTables(pool: Pool) {
           ON admin_sessions (expires_at)
       `);
 
+      await pool.query(`
+        ALTER TABLE admin_users
+          ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'admin'
+      `);
+
       const count = await pool.query<{ count: string }>("SELECT COUNT(*) FROM admin_users");
 
       if (Number(count.rows[0]?.count ?? 0) === 0) {
@@ -160,7 +180,7 @@ async function getAdminByToken(token: string): Promise<CurrentAdmin | null> {
   const tokenHash = hashToken(token);
   const result = await pool.query<SessionRow>(
     `
-    SELECT admin_users.id, admin_users.email, admin_users.created_at, admin_users.updated_at
+    SELECT admin_users.id, admin_users.email, admin_users.role, admin_users.created_at, admin_users.updated_at
     FROM admin_sessions
     JOIN admin_users ON admin_users.id = admin_sessions.admin_id
     WHERE admin_sessions.token_hash = $1
@@ -180,6 +200,7 @@ async function getAdminByToken(token: string): Promise<CurrentAdmin | null> {
   return {
     id: admin.id,
     email: admin.email,
+    role: normalizeAdminRole(admin.role),
   };
 }
 
@@ -206,8 +227,8 @@ export async function loginAdmin(email: string, password: string) {
   await ensureAdminTables(pool);
 
   const normalizedEmail = normalizeEmail(email);
-  const result = await pool.query<{ id: string; email: string; password_hash: string }>(
-    "SELECT id, email, password_hash FROM admin_users WHERE email = $1",
+  const result = await pool.query<{ id: string; email: string; role: string; password_hash: string }>(
+    "SELECT id, email, role, password_hash FROM admin_users WHERE email = $1",
     [normalizedEmail],
   );
   const admin = result.rows[0];
@@ -235,6 +256,7 @@ export async function loginAdmin(email: string, password: string) {
     admin: {
       id: admin.id,
       email: admin.email,
+      role: normalizeAdminRole(admin.role),
     },
   };
 }
@@ -255,13 +277,13 @@ export async function listAdminUsers() {
   await ensureAdminTables(pool);
 
   const result = await pool.query<AdminUserRow>(
-    "SELECT id, email, created_at, updated_at FROM admin_users ORDER BY created_at ASC",
+    "SELECT id, email, role, created_at, updated_at FROM admin_users ORDER BY created_at ASC",
   );
 
   return result.rows.map(mapAdmin);
 }
 
-export async function createAdminUser(email: string, password: string) {
+export async function createAdminUser(email: string, password: string, role: AdminRole = "admin") {
   const pool = requirePool();
   await ensureAdminTables(pool);
 
@@ -277,17 +299,22 @@ export async function createAdminUser(email: string, password: string) {
 
   const result = await pool.query<AdminUserRow>(
     `
-    INSERT INTO admin_users (id, email, password_hash)
-    VALUES ($1, $2, $3)
-    RETURNING id, email, created_at, updated_at
+    INSERT INTO admin_users (id, email, password_hash, role)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, email, role, created_at, updated_at
     `,
-    [randomUUID(), normalizedEmail, hashPassword(password)],
+    [randomUUID(), normalizedEmail, hashPassword(password), normalizeAdminRole(role)],
   );
 
   return mapAdmin(result.rows[0]);
 }
 
-export async function updateAdminUser(id: string, email: string, password?: string) {
+export async function updateAdminUser(
+  id: string,
+  email: string,
+  password?: string,
+  role?: AdminRole,
+) {
   const pool = requirePool();
   await ensureAdminTables(pool);
 
@@ -301,24 +328,26 @@ export async function updateAdminUser(id: string, email: string, password?: stri
     throw new Error("كلمة السر يجب أن تكون 6 أحرف على الأقل.");
   }
 
+  const nextRole = role === undefined ? null : normalizeAdminRole(role);
+
   const result = password
     ? await pool.query<AdminUserRow>(
         `
         UPDATE admin_users
-        SET email = $2, password_hash = $3, updated_at = NOW()
+        SET email = $2, password_hash = $3, role = COALESCE($4, role), updated_at = NOW()
         WHERE id = $1
-        RETURNING id, email, created_at, updated_at
+        RETURNING id, email, role, created_at, updated_at
         `,
-        [id, normalizedEmail, hashPassword(password)],
+        [id, normalizedEmail, hashPassword(password), nextRole],
       )
     : await pool.query<AdminUserRow>(
         `
         UPDATE admin_users
-        SET email = $2, updated_at = NOW()
+        SET email = $2, role = COALESCE($3, role), updated_at = NOW()
         WHERE id = $1
-        RETURNING id, email, created_at, updated_at
+        RETURNING id, email, role, created_at, updated_at
         `,
-        [id, normalizedEmail],
+        [id, normalizedEmail, nextRole],
       );
 
   if (!result.rows[0]) {

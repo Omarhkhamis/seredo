@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import {
   createAdminUser,
   getCurrentAdminFromRequest,
+  isFullAdmin,
   listAdminUsers,
+  normalizeAdminRole,
 } from "@/lib/admin-auth";
 
 function isDuplicateEmailError(error: unknown) {
@@ -14,6 +16,10 @@ export async function GET(request: Request) {
 
   if (!admin) {
     return NextResponse.json({ message: "يجب تسجيل الدخول أولاً." }, { status: 401 });
+  }
+
+  if (!isFullAdmin(admin)) {
+    return NextResponse.json({ message: "لا تملك صلاحية إدارة المدراء." }, { status: 403 });
   }
 
   const admins = await listAdminUsers();
@@ -28,9 +34,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "يجب تسجيل الدخول أولاً." }, { status: 401 });
   }
 
+  if (!isFullAdmin(admin)) {
+    return NextResponse.json({ message: "لا تملك صلاحية إدارة المدراء." }, { status: 403 });
+  }
+
   try {
-    const body = (await request.json()) as { email?: string; password?: string };
-    const createdAdmin = await createAdminUser(body.email ?? "", body.password ?? "");
+    const body = (await request.json()) as { email?: string; password?: string; role?: string };
+    const createdAdmin = await createAdminUser(
+      body.email ?? "",
+      body.password ?? "",
+      normalizeAdminRole(body.role),
+    );
     const admins = await listAdminUsers();
 
     return NextResponse.json({

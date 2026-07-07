@@ -3,11 +3,13 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import Swal from "sweetalert2";
+import { downloadVisitorQrCard } from "@/components/pages/visitor-qr-card";
 
 type RegistrationType = "visitor" | "exhibitor";
 
 type RegistrationFormProps = {
   type: RegistrationType;
+  logoSrc?: string;
 };
 
 type RegistrationResponse = {
@@ -128,14 +130,36 @@ function validateForm(values: FormState) {
   return errors;
 }
 
-export function RegistrationForm({ type }: RegistrationFormProps) {
+export function RegistrationForm({ type, logoSrc }: RegistrationFormProps) {
   const [values, setValues] = useState<FormState>(initialFormState);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<RegistrationResponse | null>(null);
+  const [isDownloadingCard, setIsDownloadingCard] = useState(false);
 
   const isVisitor = type === "visitor";
+
+  async function handleDownloadCard() {
+    const qrImage = result?.qr_data_url || result?.qr_url;
+
+    if (!qrImage || isDownloadingCard) {
+      return;
+    }
+
+    setIsDownloadingCard(true);
+
+    try {
+      await downloadVisitorQrCard({
+        qrImage,
+        registrationId: result?.registration_id || "",
+        fullName: result?.full_name || "",
+        logoSrc,
+      });
+    } finally {
+      setIsDownloadingCard(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -249,11 +273,21 @@ export function RegistrationForm({ type }: RegistrationFormProps) {
             <span className="seredo-native-form__registration-id">{result.registration_id}</span>
           ) : null}
           {status === "success" && isVisitor && (result?.qr_data_url || result?.qr_url) ? (
-            <img
-              className="seredo-native-form__qr"
-              src={result.qr_data_url || result.qr_url}
-              alt="QR Code"
-            />
+            <>
+              <img
+                className="seredo-native-form__qr"
+                src={result.qr_data_url || result.qr_url}
+                alt="QR Code"
+              />
+              <button
+                className="seredo-native-form__qr-download"
+                type="button"
+                disabled={isDownloadingCard}
+                onClick={() => void handleDownloadCard()}
+              >
+                {isDownloadingCard ? "جاري تجهيز البطاقة..." : "تحميل QR"}
+              </button>
+            </>
           ) : null}
         </div>
       ) : null}

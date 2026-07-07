@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-
-type RegistrationType = "visitor" | "exhibitor";
+import QRCode from "qrcode";
+import { createRegistration, type RegistrationType } from "@/lib/registrations";
+import { hasDatabaseConnection } from "@/lib/db";
+import { resolveRequestOrigin } from "@/lib/request-origin";
 
 type RegistrationPayload = {
   type?: string;
@@ -82,6 +84,23 @@ function validateRegistration(payload: RegistrationPayload) {
   return { ok: true as const, data: cleaned };
 }
 
+function forwardToGoogleWebhook(data: Record<string, string>) {
+  const webhookUrl = process.env.GOOGLE_REGISTRATION_WEBHOOK_URL;
+
+  if (!webhookUrl) {
+    return;
+  }
+
+  // نسخة احتياطية إلى Google Sheets، لا تُعطّل التسجيل المحلي إذا فشلت.
+  void fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  }).catch(() => undefined);
+}
+
 export async function POST(request: Request) {
   let body: RegistrationPayload;
 
@@ -97,47 +116,55 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  const webhookUrl = process.env.GOOGLE_REGISTRATION_WEBHOOK_URL;
-
-  if (!webhookUrl) {
+  if (!hasDatabaseConnection()) {
     return NextResponse.json(
-      {
-        message:
-          "تم تجهيز الفورم داخل الموقع، لكن رابط Google webhook غير مضبوط بعد.",
-      },
+      { message: "قاعدة البيانات غير مضبوطة، لا يمكن حفظ التسجيل حالياً." },
       { status: 503 },
     );
   }
 
+  const { type, ...data } = validation.data;
+  const origin = resolveRequestOrigin(request);
+
   try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const record = await createRegistration(
+      type,
+      data,
+      (registrationId) => `${origin}/verify?id=${encodeURIComponent(registrationId)}`,
+    );
+
+    forwardToGoogleWebhook(validation.data);
+
+    if (type === "exhibitor") {
+      return NextResponse.json({
+        ok: true,
+        type,
+        registration_id: record.registrationId,
+        full_name: record.fullName,
+      });
+    }
+
+    const qrDataUrl = await QRCode.toDataURL(record.verifyUrl, {
+      width: 300,
+      margin: 2,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#16224A",
+        light: "#FFFFFF",
       },
-      body: JSON.stringify(validation.data),
     });
 
-    const text = await response.text();
-    let result: unknown = {};
-
-    try {
-      result = text ? JSON.parse(text) : {};
-    } catch {
-      result = { message: text };
-    }
-
-    if (!response.ok) {
-      return NextResponse.json(
-        { message: "تعذر إرسال التسجيل إلى Google. حاول مرة أخرى.", details: result },
-        { status: 502 },
-      );
-    }
-
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ok: true,
+      type,
+      registration_id: record.registrationId,
+      full_name: record.fullName,
+      verify_url: record.verifyUrl,
+      qr_data_url: qrDataUrl,
+    });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "تعذر إرسال التسجيل.";
+    const message = error instanceof Error ? error.message : "تعذر حفظ التسجيل.";
 
-    return NextResponse.json({ message }, { status: 502 });
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

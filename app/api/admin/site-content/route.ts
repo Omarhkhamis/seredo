@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { getCurrentAdminFromRequest } from "@/lib/admin-auth";
+import { getCurrentAdminFromRequest, isFullAdmin } from "@/lib/admin-auth";
 import {
   getSiteContent,
   hasDatabaseConnection,
@@ -28,6 +28,10 @@ export async function POST(request: Request) {
 
   if (!admin) {
     return NextResponse.json({ message: "يجب تسجيل الدخول أولاً." }, { status: 401 });
+  }
+
+  if (!isFullAdmin(admin)) {
+    return NextResponse.json({ message: "لا تملك صلاحية تعديل محتوى الموقع." }, { status: 403 });
   }
 
   try {
